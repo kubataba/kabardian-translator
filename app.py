@@ -1469,13 +1469,6 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
-# Save HTML template
-if not os.path.exists('templates'):
-    os.makedirs('templates')
-
-with open('templates/index.html', 'w', encoding='utf-8') as f:
-    f.write(HTML_TEMPLATE)
-
 @app.route('/')
 def index():
     return render_template('index.html')
