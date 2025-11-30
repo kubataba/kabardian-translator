@@ -42,6 +42,7 @@ setup(
         # Audio processing
         "soundfile>=0.12.1",
         "numpy>=1.24.3",
+        "scipy>=1.11.0",  # ДОБАВЛЕНО: необходимо для Silero TTS
         "torchaudio>=2.1.0",
         "omegaconf>=2.3.0",
         
