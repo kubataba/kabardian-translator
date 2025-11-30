@@ -1,0 +1,181 @@
+# .gitignore for Kabardian Translator
+
+# ============================================
+# MODELS (DO NOT COMMIT - too large!)
+# ============================================
+models/
+*.bin
+*.safetensors
+*.ot
+*.msgpack
+
+# ============================================
+# Python
+# ============================================
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Package management
+.Python
+pip-delete-this-directory.txt
+pip-log.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================
+# Application temporary files
+# ============================================
+# TTS audio files
+/tmp/
+temp_audio/
+*.wav
+*.mp3
+*.ogg
+
+# Logs
+*.log
+logs/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# IDEs and editors
+# ============================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save/
+tramp
+.\#*
+
+# ============================================
+# macOS
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ============================================
+# Windows
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# ============================================
+# Linux
+# ============================================
+*~
+
+# ============================================
+# Project specific
+# ============================================
+# Saved checkpoints
+checkpoints/
+saved_models/
+
+# Hugging Face cache
+.huggingface/
+~/.cache/huggingface/
+
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Flask temporary files
+instance/
+.webassets-cache
+
+# Silero TTS cache
+~/.cache/torch/
+~/.cache/torch/hub/
+
+# ============================================
+# OS generated
+# ============================================
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# ============================================
+# IMPORTANT: Documentation and configs WE COMMIT!
+# ============================================
+# These files should be in repository:
+# !README.md
+# !USAGE_GUIDE.md
+# !CODE_OF_CONDUCT.md
+# !requirements.txt
+# !app.py
+# !translation_service.py
+# !tts_service.py
+# !transliterator.py
+# !tokenizer_manager.py
+# !download_models.py
+# !LICENSE
