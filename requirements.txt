@@ -15,6 +15,7 @@ huggingface-hub==0.20.3
 # Audio processing  
 soundfile==0.12.1
 numpy==1.24.3
+scipy==1.11.0
 
 # Silero TTS dependencies
 torchaudio==2.1.0
