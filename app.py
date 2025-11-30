@@ -1,7 +1,6 @@
 # app.py
 # Kabardian-Russian Translator with Text-to-Speech and Transliteration
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
-
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import torch
 import os
@@ -10,12 +9,21 @@ import atexit
 import signal
 import sys
 import gc
-
 from translation_service import TranslationService
 from tts_service import TTSService
 from transliterator import transliterator  # New transliteration module
 
-app = Flask(__name__)
+current_file = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file)
+template_dir = os.path.join(current_dir, 'kabardian_translator', 'templates')
+
+if not os.path.exists(template_dir):
+    template_dir = os.path.join(current_dir, 'templates')
+
+if not os.path.exists(template_dir):
+    template_dir = 'kabardian_translator/templates'
+
+app = Flask(__name__, template_folder=template_dir)
 
 # Memory cleanup function
 def cleanup_memory():
