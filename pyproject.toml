@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kabardian-translator"
-version = "1.0.0"
+version = "1.0.1"
 description = "Multilingual translator for Kabardian and Caucasian languages with speech synthesis"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -64,9 +64,22 @@ Issues = "https://github.com/kubataba/kabardian-translator/issues"
 
 [project.scripts]
 kabardian-translator = "kabardian_translator.cli:main"
+kabardian-download-models = "kabardian_translator.download_models:main"
 
 [tool.setuptools]
 packages = ["kabardian_translator"]
 
 [tool.setuptools.package-data]
-kabardian_translator = ["templates/*.html"]  # templates внутри пакета
+kabardian_translator = [
+    "templates/*.html",
+    "*.py",
+    "app.py",
+    "download_models.py",
+    "translation_service.py",
+    "tts_service.py",
+    "transliterator.py",
+    "tokenizer_manager.py"
+]
+
+[tool.setuptools.find]
+include = ["*.py"]
