@@ -1,6 +1,22 @@
 # app.py
 # Kabardian-Russian Translator with Text-to-Speech and Transliteration
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
+# ЕСЛИ ЗАПУСК НАПРЯМУЮ (python app.py) - ПРЕДЛОЖИТЬ ИСПОЛЬЗОВАТЬ CLI
+if __name__ == "__main__":
+    print("🎯 Kabardian Translator")
+    print("=" * 50)
+    print("⚠️  Рекомендуемый способ запуска:")
+    print("   kabardian-translator")
+    print("\n📦 Для установки как пакет:")
+    print("   pip install kabardian-translator")
+    print("   kabardian-translator")
+    print("\n📥 Для загрузки моделей:")
+    print("   kabardian-download-models")
+    print("=" * 50)
+    print("\n⚡ Запускаю в обычном режиме...")
+    print("   (модели не будут скачиваться автоматически)")
+    import time
+    time.sleep(2)
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import torch
 import os
