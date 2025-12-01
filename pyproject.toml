@@ -80,6 +80,3 @@ kabardian_translator = [
     "transliterator.py",
     "tokenizer_manager.py"
 ]
-
-[tool.setuptools.find]
-include = ["*.py"]
