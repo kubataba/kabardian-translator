@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="kabardian-translator",
-    version="1.0.0",
+    version="1.0.1",
     author="Kubataba",
     author_email="info@copperline.info",
     description="Multilingual translator for Kabardian and Caucasian languages with speech synthesis",
@@ -52,11 +52,15 @@ setup(
     entry_points={
         "console_scripts": [
             "kabardian-translator=kabardian_translator.cli:main",
+            "kabardian-download-models=kabardian_translator.download_models:main",
         ],
     },
     include_package_data=True,
     package_data={
-        '': ['templates/*.html'],
+        'kabardian_translator': [
+            'templates/*.html',
+            '*.py',
+        ],
     },
     extras_require={
         'audio': ['librosa>=0.10.0'],
