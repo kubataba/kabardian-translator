@@ -1,3 +1,4 @@
+
 # .gitignore for Kabardian Translator
 
 # ============================================
@@ -22,12 +23,16 @@ ENV/
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 *.so
 
 # Package management
 .Python
 pip-delete-this-directory.txt
 pip-log.txt
+build/
+dist/
+*.egg-info/
 
 # Unit test / coverage reports
 htmlcov/
@@ -142,7 +147,6 @@ saved_models/
 
 # Hugging Face cache
 .huggingface/
-~/.cache/huggingface/
 
 # Environment configuration
 .env
@@ -165,17 +169,11 @@ ehthumbs.db
 Thumbs.db
 
 # ============================================
-# IMPORTANT: Documentation and configs WE COMMIT!
+# IMPORTANT: ДОБАВИТЬ ТОЛЬКО ЭТУ СЕКЦИЮ
 # ============================================
 # These files should be in repository:
 # !README.md
-# !USAGE_GUIDE.md
-# !CODE_OF_CONDUCT.md
+# !pyproject.toml
 # !requirements.txt
-# !app.py
-# !translation_service.py
-# !tts_service.py
-# !transliterator.py
-# !tokenizer_manager.py
-# !download_models.py
 # !LICENSE
+# !kabardian_translator/
