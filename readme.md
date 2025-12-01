@@ -1,10 +1,10 @@
 # 🌐 Kabardian Translator  
 **Voice-Enabled Multilingual Translator for Caucasian Languages**
 
+[![PyPI version](https://img.shields.io/pypi/v/kabardian-translator.svg)](https://pypi.org/project/kabardian-translator/)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1.0-red.svg)](https://pytorch.org/)
-[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Models-yellow.svg)](https://huggingface.co/)
 
 > 🎯 **Educational tool** for learning Kabardian and Caucasian languages with AI-powered translation and speech synthesis
 
@@ -22,54 +22,74 @@
 
 - **Python**: 3.11 or higher
 - **RAM**: 16GB minimum (for MPS acceleration on Apple Silicon)
-- **Storage**: ~10GB for AI models
+- **Storage**: ~15GB for AI models
 - **OS**: macOS (Apple Silicon), Linux, or Windows
 
-### Method 1: Package Installation (Recommended)
+### 📦 Installation via PyPI (Recommended)
 
-```bash
-# 1. Clone & setup
-git clone https://github.com/kubataba/kabardian-translator.git
-cd kabardian-translator
+The easiest way to install Kabardian Translator:
 
-# 2. Create virtual environment
+```bash  
+# Create virtual environment
 python3.11 -m venv venv
 source venv/bin/activate
 
-# 3. Install as package (auto-installs all dependencies)
+# Install from PyPI
+pip install kabardian-translator
+
+# Download AI models (required, ~15GB)
+kabardian-download-models
+
+# Launch the application
+kabardian-translator
+# → Open http://localhost:5500 in your browser
+```
+
+### 🛠️ Alternative Installation Methods
+
+#### From GitHub (Development Version)
+
+```bash
+# Clone the repository
+git clone https://github.com/kubataba/kabardian-translator.git
+cd kabardian-translator
+
+# Create virtual environment
+python3.11 -m venv venv
+source venv/bin/activate
+
+# Install in development mode
 pip install -e .
 
-# 4. Download AI models (~10GB)
-python download_models.py
+# Download models
+kabardian-download-models
 
-# 5. Launch application
-kabardian-translator --port 5500
-# → Open http://localhost:5500
+# Run
+kabardian-translator
 ```
 
-### Method 2: Manual Installation
+#### Manual Installation (Legacy)
 
 ```bash
-# 1. Clone & setup
+# Clone repository
 git clone https://github.com/kubataba/kabardian-translator.git
 cd kabardian-translator
 
-# 2. Create virtual environment
+# Create virtual environment
 python3.11 -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 3. Install dependencies manually
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Download AI models (~10GB)
+# Download models
 python3 download_models.py
 
-# 5. Launch application
+# Run application
 python3 app.py
-# → Open http://localhost:5500
 ```
 
-### CLI Options
+### 🎛️ CLI Options
 
 ```bash
 # Custom port
@@ -151,31 +171,29 @@ kabardian-translator --help
 
 For systems with 8GB RAM, disable MPS and use CPU mode:
 
-**Option 1: Environment variable (temporary)**
-```bash
+**Option 1: Environment variable (temporary)**  
+
+```bash  
 export PYTORCH_ENABLE_MPS_FALLBACK=1
 kabardian-translator
 ```
 
-**Option 2: Edit app.py (permanent)**
-```python
-# Find this line:
-device = "mps" if torch.backends.mps.is_available() else "cpu"
+**Option 2: Edit configuration (permanent)**  
 
-# Change to:
-device = "cpu"  # Force CPU mode
+```bash
+# Create config override
+echo 'device = "cpu"' > ~/.kabardian_config.py
 ```
 
-> ⚠️ CPU mode runs 3–5× slower but works on any system.
+### Models Won't Load  
 
-### Models Won't Load
 ```bash
 # Try mirror if Hugging Face is blocked
 export HF_ENDPOINT=https://hf-mirror.com
-python3 download_models.py
+kabardian-download-models
 ```
 
-### MPS Unavailable
+### MPS Unavailable  
 
 If MPS acceleration is not detected on Apple Silicon:
 
@@ -194,19 +212,22 @@ If returns `False`:
 - Comment out unused models in `app.py`
 
 ### Transliteration Inaccurate
-Edit `transliterator.py`:
+Edit `transliterator.py`:  
+
 ```python
 self.turkish_to_kazakh['h'] = 'х'  # Better than 'ҳ'
 ```
 
-### Command Not Found: `kabardian-translator`
-If after `pip install -e .` the command is not recognized:
-```bash
+### Command Not Found: `kabardian-translator`  
+
+If after `pip install kabardian-translator` the command is not recognized:
+
+```bash  
 # Reinstall package
 pip uninstall kabardian-translator
-pip install -e .
+pip install kabardian-translator
 
-# Or use direct Python call
+# Or use Python module call
 python -m kabardian_translator.cli --port 5500
 ```
 
@@ -232,7 +253,7 @@ python -m kabardian_translator.cli --port 5500
 ---
 
 ## 📞 Support and Contribution
-- **Found a bug?** → Open an Issue on GitHub
+- **Found a bug?** → Open an Issue on [GitHub](https://github.com/kubataba/kabardian-translator/issues)
 - **Want to contribute?** → Fork → Branch → Commit → Pull Request
 - **Need help?** → Check `TROUBLESHOOTING` or Discussions
 
@@ -246,6 +267,7 @@ python -m kabardian_translator.cli --port 5500
 ---
 
 ## 📚 Additional Resources
+- [PyPI Package](https://pypi.org/project/kabardian-translator/) - Official package repository
 - [M2M100 Documentation](https://huggingface.co/facebook/m2m100_1.2B)
 - [Silero TTS Docs](https://github.com/snakers4/silero-models#text-to-speech)
 - [PyTorch MPS Guide](https://pytorch.org/docs/stable/notes/mps.html)
@@ -254,3 +276,4 @@ python -m kabardian_translator.cli --port 5500
 ---
 
 Made with ❤️ for preserving and studying the Kabardian language
+```
