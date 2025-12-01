@@ -3,13 +3,21 @@ import os
 import sys
 import argparse
 
-# Добавляем текущую директорию в путь для импорта
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
 def main():
     """
     CLI для Kabardian Translator
     """
+    # ПРОВЕРКА И ЗАГРУЗКА МОДЕЛЕЙ ПЕРЕД ЗАПУСКОМ
+    try:
+        from kabardian_translator import ensure_models_downloaded
+        if not ensure_models_downloaded():
+            print("❌ Не удалось загрузить модели. Приложение не может запуститься.")
+            sys.exit(1)
+    except ImportError as e:
+        print(f"❌ Ошибка импорта: {e}")
+        print("💡 Убедитесь, что пакет установлен корректно")
+        sys.exit(1)
+    
     parser = argparse.ArgumentParser(
         description="🌐 Kabardian Translator - Voice-enabled multilingual translator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -19,9 +27,8 @@ def main():
   kabardian-translator --port 8080        # Запуск на порту 8080
   kabardian-translator --host localhost   # Только локальный доступ
   
-  # Традиционный способ тоже работает:
-  python app.py
-  python download_models.py
+  # Команда для загрузки моделей:
+  kabardian-download-models               # Скачать модели (~10GB)
         """
     )
     
@@ -36,7 +43,7 @@ def main():
     
     # Импортируем здесь, чтобы не замедлять запуск CLI
     try:
-        from app import app as flask_app
+        from kabardian_translator.app import app as flask_app
     except ImportError as e:
         print(f"❌ Ошибка импорта: {e}")
         print("💡 Убедитесь, что все файлы в текущей директории")
