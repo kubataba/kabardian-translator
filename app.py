@@ -1,6 +1,7 @@
 # app.py
 # Kabardian-Russian Translator with Text-to-Speech and Transliteration
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
+
 # ЕСЛИ ЗАПУСК НАПРЯМУЮ (python app.py) - ПРЕДЛОЖИТЬ ИСПОЛЬЗОВАТЬ CLI
 if __name__ == "__main__":
     print("🎯 Kabardian Translator")
@@ -17,6 +18,7 @@ if __name__ == "__main__":
     print("   (модели не будут скачиваться автоматически)")
     import time
     time.sleep(2)
+
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import torch
 import os
@@ -27,7 +29,7 @@ import sys
 import gc
 from translation_service import TranslationService
 from tts_service import TTSService
-from transliterator import transliterator  # New transliteration module
+from transliterator import transliterator
 
 current_file = os.path.abspath(__file__)
 current_dir = os.path.dirname(current_file)
