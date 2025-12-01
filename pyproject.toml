@@ -27,7 +27,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Education",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Natural Language :: Kabardian",
+    "Natural Language :: English",
+    "Natural Language :: Russian", 
+    "Natural Language :: Other",
+    "Topic :: Text Processing :: Linguistic",
 ]
 
 dependencies = [
