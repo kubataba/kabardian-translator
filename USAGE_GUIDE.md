@@ -1,26 +1,79 @@
 # Quick Start Guide
 
-## 🎯 First Launch (Recommended - PyPI)
+## 🎯 First Launch (Recommended)
 
-**Install from PyPI:**
+**1. Check Python version (requires 3.11+):**  
+
+```bash
+python --version
+# or
+python3 --version
+```
+
+**2. Create virtual environment with Python 3.11:**  
+
+```bash
+python3.11 -m venv venv
+```
+
+**3. Activate virtual environment:**  
+
+```bash
+# Linux/Mac:
+source venv/bin/activate
+
+# Windows:
+venv\Scripts\activate
+```
+
+**4. Install from PyPI:**  
 
 ```bash
 pip install kabardian-translator
 ```
 
-**Download AI models (~15GB):**
+**5. Download AI models (~15GB):**  
 
 ```bash
 kabardian-download-models
 ```
 
-**Launch the application:**
+**6. Launch the application:**  
 
 ```bash
 kabardian-translator
 ```
 
-**Open in browser:** http://localhost:5500
+**7. Open in browser:** http://localhost:5500
+
+## 🛠️ Alternative: Development Setup
+
+**From GitHub source:**
+
+```bash
+# Clone repository
+git clone https://github.com/kubataba/kabardian-translator.git
+cd kabardian-translator
+
+# Check Python version
+python3.11 --version
+
+# Create virtual environment
+python3.11 -m venv venv
+
+# Activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
+
+# Download models
+kabardian-download-models
+
+# Run application
+kabardian-translator
+```
+
 
 ## 🛠️ Alternative: Development Setup
 
