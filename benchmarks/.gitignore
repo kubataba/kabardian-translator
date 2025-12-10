@@ -1,0 +1,13 @@
+# Benchmark output files (add to your .gitignore)
+# Keep the scripts and static results, ignore generated files
+
+benchmarks/benchmark_results_*.json
+benchmarks/benchmark_ru_kbd_*.csv
+benchmarks/benchmark_kbd_ru_*.csv
+benchmarks/BENCHMARK_REPORT_*.md
+
+# Keep these committed:
+# benchmarks/bench.py
+# benchmarks/README.md
+# benchmarks/requirements.txt
+# benchmarks/BENCHMARK_500.md (static reference results)
