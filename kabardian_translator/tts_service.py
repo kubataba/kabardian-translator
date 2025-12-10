@@ -31,7 +31,48 @@ class TTSService:
         self.temp_files = set()
         self._model_loaded = False
         
+        # Character mapping for Kabardian normalization
+        self.kbd_normalization_map = {
+            'I': 'Ӏ',    # Latin I → Cyrillic palochka
+            'l': 'Ӏ',    # Latin l → Cyrillic palochka
+            '|': 'Ӏ',    # Vertical bar → Cyrillic palochka
+            'ӏ': 'Ӏ',    # Alternative palochka → standard palochka
+            # All variants should map to standard Ӏ
+        }
+        
         self._setup_temp_dir()
+    
+    def _normalize_kabardian_text(self, text):
+        """
+        Normalize Kabardian text for TTS.
+        Ensures all character variants are converted to standard Kabardian alphabet.
+        
+        Args:
+            text: input text to normalize
+            
+        Returns:
+            normalized text with standardized Kabardian characters
+        """
+        if not text or not isinstance(text, str):
+            return text
+        
+        normalized_text = text
+        
+        # Replace all variants with standard Kabardian palochka
+        for variant, standard in self.kbd_normalization_map.items():
+            normalized_text = normalized_text.replace(variant, standard)
+        
+        # Optional: log if normalization changed something
+        if normalized_text != text:
+            changed_chars = []
+            for i in range(min(len(text), len(normalized_text))):
+                if text[i] != normalized_text[i]:
+                    changed_chars.append(f"'{text[i]}'→'{normalized_text[i]}'")
+            
+            if changed_chars:
+                print(f"🔤 Kabardian normalization: {', '.join(changed_chars[:5])}")
+        
+        return normalized_text
     
     def _load_model(self):
         """Lazy loading of Silero TTS model"""
@@ -69,6 +110,10 @@ class TTSService:
         if not text.strip():
             return text, 'ru_eduard'
         
+        # Apply Kabardian normalization if needed
+        if lang_code == 'kbd_Cyrl':
+            text = self._normalize_kabardian_text(text)
+        
         # Check if transliteration is needed
         if transliterator.needs_transliteration(lang_code):
             print(f"🔤 Transliteration for TTS: {lang_code}")
@@ -84,6 +129,10 @@ class TTSService:
                 text, lang_code, target_script
             )
             
+            # Apply normalization to transliterated text if it's Kabardian
+            if target_script == 'kbd':
+                transliterated_text = self._normalize_kabardian_text(transliterated_text)
+            
             # Determine speaker
             actual_speaker = transliterator.get_target_speaker(lang_code)
             
@@ -91,7 +140,11 @@ class TTSService:
             
             return transliterated_text, actual_speaker
         else:
-            # For languages without transliteration, use standard speaker
+            # For languages without transliteration
+            # Apply Kabardian normalization for Kabardian text
+            if lang_code == 'kbd_Cyrl':
+                text = self._normalize_kabardian_text(text)
+            
             # Determine speaker based on language
             if lang_code in ['rus_Cyrl', 'ukr_Cyrl', 'bel_Cyrl', 'lav_Latn', 'deu_Latn', 'spa_Latn']:
                 actual_speaker = 'ru_eduard'
@@ -120,6 +173,11 @@ class TTSService:
             self._load_model()
         
         try:
+            # Apply Kabardian normalization BEFORE any processing
+            if lang_code == 'kbd_Cyrl':
+                text = self._normalize_kabardian_text(text)
+                print(f"🔤 Applied Kabardian normalization for TTS")
+            
             # Prepare text (transliteration if needed)
             if lang_code and transliterator.needs_transliteration(lang_code):
                 prepared_text, actual_speaker = self.prepare_text_for_tts(text, lang_code)
@@ -130,6 +188,10 @@ class TTSService:
                 actual_speaker = speaker
                 transliterated = False
             
+            # Apply Kabardian normalization to prepared text if it's Kabardian
+            if lang_code == 'kbd_Cyrl':
+                prepared_text = self._normalize_kabardian_text(prepared_text)
+            
             # Limit text length
             if len(prepared_text) > max_length:
                 prepared_text = prepared_text[:max_length] + "..."
@@ -139,6 +201,12 @@ class TTSService:
             
             if not prepared_text.strip():
                 return {'error': 'Empty text'}
+            
+            # Log normalization if applied
+            original_preview = text[:50] if len(text) > 50 else text
+            prepared_preview = prepared_text[:50] if len(prepared_text) > 50 else prepared_text
+            if original_preview != prepared_preview and lang_code == 'kbd_Cyrl':
+                print(f"🔤 Kabardian TTS input: '{original_preview}' → '{prepared_preview}'")
             
             # Create simple SSML
             ssml_text = f'<speak><p><s>{prepared_text}</s></p></speak>'
@@ -176,7 +244,8 @@ class TTSService:
                 'text_length': len(text),
                 'prepared_text': prepared_text,
                 'transliterated': transliterated,
-                'truncated': truncated
+                'truncated': truncated,
+                'normalized': lang_code == 'kbd_Cyrl'  # Flag if normalization was applied
             }
             
         except Exception as e:
@@ -233,6 +302,22 @@ class TTSService:
             'ru_eduard': 'Russian (Eduard)',
             'kbd_eduard': 'Kabardian (Eduard)'
         }
+    
+    def normalize_text_for_speech(self, text, lang_code):
+        """
+        Public method to normalize text for speech synthesis.
+        Can be used externally to prepare text.
+        
+        Args:
+            text: text to normalize
+            lang_code: language code
+            
+        Returns:
+            normalized text
+        """
+        if lang_code == 'kbd_Cyrl':
+            return self._normalize_kabardian_text(text)
+        return text
     
     def __del__(self):
         """Cleanup when object is deleted"""
