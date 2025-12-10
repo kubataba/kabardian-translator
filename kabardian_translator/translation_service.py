@@ -1,7 +1,7 @@
 # translation_service.py
 # Translation service with MarianMT support for Kabardian ↔ Russian
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
-# Version 1.0.4
+# Version 1.0.3
 
 import time
 import torch
@@ -30,13 +30,13 @@ class TranslationService:
     
     def _filter_latin_words(self, text, target_lang_code):
         """
-        Фильтрует латинские слова из текста если целевой язык не использует латиницу.
-        Упрощенная версия с сохранением пробелов.
+        Filter Latin words from text if target language doesn't use Latin script.
+        Simplified version with whitespace preservation.
         """
         if not text or not target_lang_code:
             return text
         
-        # Языки, которые используют латиницу (не фильтруем для них)
+        # Languages that use Latin script (no filtering for these)
         latin_languages = {'eng_Latn', 'deu_Latn', 'fra_Latn', 'spa_Latn', 
                         'tur_Latn', 'azj_Latn', 'lav_Latn'}
         
@@ -45,39 +45,39 @@ class TranslationService:
         
         import re
         
-        # Простая логика: разбиваем на слова, проверяем каждое
-        # Используем более умное разбиение с сохранением пробелов
+        # Simple logic: split into words, check each
+        # Use smarter splitting with whitespace preservation
         def process_word(match):
             word = match.group(0)
             
-            # Быстрые проверки исключений
+            # Quick exception checks
             if len(word) <= 1:
                 return word
             
-            # Римские цифры
+            # Roman numerals
             roman_numerals = {'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'}
             if word.upper() in roman_numerals:
                 return word
             
-            # Содержит цифры
+            # Contains digits
             if any(c.isdigit() for c in word):
                 return word
             
-            # Проверяем, состоит ли слово только из латинских букв
+            # Check if word consists only of Latin letters
             if word.isalpha() and all('a' <= c.lower() <= 'z' for c in word):
-                # Длинное латинское слово - удаляем
+                # Long Latin word - remove
                 if len(word) > 1:
                     print(f"🔠 Filtered: '{word}'")
-                    return ''  # Удаляем слово
+                    return ''  # Remove word
                 else:
-                    return word  # Короткое слово оставляем
+                    return word  # Keep short word
             else:
-                return word  # Не латинское слово оставляем
+                return word  # Keep non-Latin word
         
-        # Обрабатываем слова в тексте
+        # Process words in text
         filtered_text = re.sub(r'\b[a-zA-Z\']+\b', process_word, text)
         
-        # Убираем лишние пробелы (могут появиться после удаления слов)
+        # Remove extra spaces (may appear after word removal)
         filtered_text = re.sub(r'\s+', ' ', filtered_text).strip()
         
         return filtered_text
@@ -219,7 +219,14 @@ class TranslationService:
                             **inputs, max_length=512, num_beams=4, early_stopping=True
                         )
                         
+                        # Decode the result
                         translation = self._ru_kbd_tokenizer.decode(outputs[0], skip_special_tokens=True)
+                        
+                        # IMPORTANT: REVERSE MAPPING I → Ӏ for Kabardian output
+                        # All Latin variants → Kabardian palochka for TTS compatibility
+                        reverse_mapping = {'I': 'Ӏ', 'l': 'Ӏ', '|': 'Ӏ', 'ӏ': 'Ӏ'}
+                        for latin_char, cyrillic_char in reverse_mapping.items():
+                            translation = translation.replace(latin_char, cyrillic_char)
                         
                         return {
                             'success': True,
@@ -235,7 +242,7 @@ class TranslationService:
                         'translation': f"Error: {str(e)[:100]}",
                         'time_ms': round((time.time() - start_time) * 1000, 2)
                     }
-            
+
             def translate_kbd_to_ru(self, text):
                 """Kabardian → Russian translation (ONLY direct)"""
                 if not text.strip():
@@ -249,7 +256,8 @@ class TranslationService:
                         if not self._load_kbd_ru():
                             return {'success': False, 'error': 'Model not available'}
                     
-                    # Preprocess Kabardian text
+                    # PREPROCESSING: Kabardian characters → Latin I
+                    # Required for MarianMT model to work correctly
                     processed_text = text
                     for old_char, new_char in self.kbd_char_mapping.items():
                         processed_text = processed_text.replace(old_char, new_char)
@@ -263,6 +271,7 @@ class TranslationService:
                             **inputs, max_length=512, num_beams=4, early_stopping=True
                         )
                         
+                        # Decode - NO reverse mapping needed (translation to Russian)
                         translation = self._kbd_ru_tokenizer.decode(outputs[0], skip_special_tokens=True)
                         
                         return {
@@ -279,7 +288,7 @@ class TranslationService:
                         'translation': f"Error: {str(e)[:100]}",
                         'time_ms': round((time.time() - start_time) * 1000, 2)
                     }
-            
+
             def cleanup(self):
                 """Cleanup MarianMT models"""
                 self._ru_kbd_model = None
@@ -306,21 +315,18 @@ class TranslationService:
             
             def _convert_lang_code(self, lang_code):
                 """Convert language code to M2M100 format - USE PARENT'S METHOD"""
-                # Используем метод родительского класса
                 return self.parent_service._convert_lang_code(lang_code)
             
             def _check_m2m100_available(self):
-                """Проверяет доступность M2M100 модели"""
                 path = self.models_dir / "m2m100"
                 if not path.exists():
                     return False
                 
-                # Проверяем что это не пустая папка (есть .no_model маркер)
+                # (is .no_model)
                 no_model_marker = path / ".no_model"
                 if no_model_marker.exists():
                     return False
-                
-                # Проверяем что есть конфиг
+
                 config_path = path / "config.json"
                 return config_path.exists()
             
@@ -340,7 +346,6 @@ class TranslationService:
                         ).to(self.device)
                     else:
                         print(f"📥 Loading base M2M100 (418M) from HuggingFace...")
-                        # ИЗМЕНЕНИЕ: Используем более легкую модель
                         self._tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
                         self._base_model = M2M100ForConditionalGeneration.from_pretrained(
                             "facebook/m2m100_418M",
@@ -372,18 +377,14 @@ class TranslationService:
                             source_lang, target_lang
                         )
                     
-                    # Проверяем доступность M2M100
                     m2m100_available = self._check_m2m100_available()
                     
-                    # Если M2M100 недоступна - ОШИБКА для любых переводов
-                    # (прямые kbd↔ru обрабатываются в основном методе translate)
                     if not m2m100_available:
                         return self._error_response(
                             f"M2M100 model not available for {source_lang}→{target_lang}",
                             source_lang, target_lang
                         )
                     
-                    # ВСЕ переводы через M2M100 (если модель доступна)
                     cascade_used = False
                     translation = None
                     model_name = "m2m100_base"
@@ -574,7 +575,6 @@ class TranslationService:
                             source_lang, target_lang
                         )
                     
-                    # Фильтруем латинские слова для не-латинских языков
                     filtered_translation = self.parent_service._filter_latin_words(translation, target_lang)
                     
                     translation_time = round((time.time() - start_time) * 1000, 2)
@@ -632,7 +632,7 @@ class TranslationService:
                 if self.device == "mps":
                     torch.mps.empty_cache()
         
-        return LazyM2M100Service(self.device, self.models_dir, self)  # Передаем self как parent_service
+        return LazyM2M100Service(self.device, self.models_dir, self) 
     
     def _get_supported_languages(self):
         """Returns supported languages by groups"""
@@ -695,7 +695,7 @@ class TranslationService:
         translation_time = round((time.time() - start_time) * 1000, 2)
         
         if result['success']:
-            # Фильтруем латинские слова для не-латинских языков
+            # Filter Latin words for non-Latin languages
             filtered_translation = self._filter_latin_words(
                 result['translation'],
                 target_lang
