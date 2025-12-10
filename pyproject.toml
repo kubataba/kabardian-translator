@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kabardian-translator"
-version = "1.0.2"
+version = "1.0.3"
 description = "Multilingual translator for Kabardian and Caucasian languages with speech synthesis"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "CC-BY-NC-4.0"}
-keywords = ["translation", "kabardian", "caucasian-languages", "tts", "nmt", "apple-silicon"]
+keywords = ["translation", "kabardian", "caucasian-languages", "tts", "nmt", "low-resource", "apple-silicon"]
 authors = [
     {name = "Kubataba", email = "info@copperline.info"}
 ]
