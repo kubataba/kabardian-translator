@@ -1,4 +1,4 @@
-# setup.py - измените version
+# setup.py - v1.0.3
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -6,14 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="kabardian-translator",
-    version="1.0.2",
+    version="1.0.3",
     author="Kubataba",
     author_email="info@copperline.info",
     description="Multilingual translator for Kabardian and Caucasian languages with speech synthesis",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kubataba/kabardian-translator",
-    packages=find_packages(include=['kabardian_translator']),
+    packages=find_packages(include=['kabardian_translator'], exclude=['benchmarks', 'benchmarks.*', 'tests', 'tests.*']),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Education",
@@ -43,7 +43,7 @@ setup(
         # Audio processing
         "soundfile>=0.12.1",
         "numpy>=1.24.3",
-        "scipy>=1.11.0",  # ДОБАВЛЕНО: необходимо для Silero TTS
+        "scipy>=1.11.0",  # Required for Silero TTS
         "torchaudio>=2.1.0",
         "omegaconf>=2.3.0",
         
