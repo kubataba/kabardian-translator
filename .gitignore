@@ -1,5 +1,4 @@
-
-# .gitignore for Kabardian Translator
+# .gitignore for Kabardian Translator v1.0.3
 
 # ============================================
 # MODELS (DO NOT COMMIT - too large!)
@@ -9,6 +8,17 @@ models/
 *.safetensors
 *.ot
 *.msgpack
+
+# ============================================
+# Benchmark generated files (v1.0.3)
+# ============================================
+benchmarks/benchmark_results_*.json
+benchmarks/benchmark_ru_kbd_*.csv
+benchmarks/benchmark_kbd_ru_*.csv
+benchmarks/BENCHMARK_REPORT_*.md
+
+# Keep static reference
+!benchmarks/BENCHMARK_500.md
 
 # ============================================
 # Python
@@ -167,13 +177,3 @@ instance/
 Icon?
 ehthumbs.db
 Thumbs.db
-
-# ============================================
-# IMPORTANT: ДОБАВИТЬ ТОЛЬКО ЭТУ СЕКЦИЮ
-# ============================================
-# These files should be in repository:
-# !README.md
-# !pyproject.toml
-# !requirements.txt
-# !LICENSE
-# !kabardian_translator/
