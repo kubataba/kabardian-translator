@@ -1,25 +1,30 @@
+# Requires Python >= 3.11
+
 # Web framework
-flask==3.0.0
+flask
 
-# Machine learning (updated versions)
-torch==2.1.0
-transformers==4.37.0
-sentencepiece==0.1.99
+# Machine learning
+torch
+transformers
+sentencepiece
 
-# Optimization for Apple Silicon
-accelerate==0.24.1
+# Optimization
+accelerate
 
-# Hugging Face Hub (compatible version)
-huggingface-hub==0.20.3
+# Hugging Face Hub
+huggingface-hub
 
-# Audio processing  
-soundfile==0.12.1
-numpy==1.24.3
-scipy==1.11.0
+# Audio processing
+soundfile
+numpy
+scipy
 
 # Silero TTS dependencies
-torchaudio==2.1.0
-omegaconf==2.3.0
+torchaudio
+omegaconf
+
+# Russian stress/accentuation
+silero_stress
 
 # Optional: advanced audio processing
-librosa==0.10.0
+librosa
