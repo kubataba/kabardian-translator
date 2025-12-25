@@ -566,7 +566,7 @@
                     <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">EN</button>
                 </div>
                 <div class="model-info">
-                    <i class="fas fa-robot"></i> <span data-ru="100 languages + Транслитерация" data-en="100 languages + Transliteration">100 языков + Транслитерация</span>
+                    <i class="fas fa-robot"></i> <span data-ru="200 languages + Транслитерация" data-en="200 languages + Transliteration">200 языков + Транслитерация</span>
                 </div>
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <i class="fas fa-moon" id="theme-icon"></i>
@@ -700,9 +700,11 @@
             'rus_Cyrl': '🇷🇺',
             'ukr_Cyrl': '🇺🇦',
             'bel_Cyrl': '🇧🇾',
-            'lav_Latn': '🇱🇻',
+            'lvs_Latn': '🇱🇻',
             'kbd_Cyrl': '🌐',
             'kaz_Cyrl': '🇰🇿',
+            'bak_Cyrl': '🏴',
+            'kir_Cyrl': '🇰🇬',
             'kat_Geor': '🇬🇪',
             'hye_Armn': '🇦🇲',
             'azj_Latn': '🇦🇿',
@@ -718,8 +720,8 @@
         
         // All languages with TTS support (including transliteration)
         const allTtsSupportedLanguages = [
-            'rus_Cyrl', 'ukr_Cyrl', 'bel_Cyrl', 'lav_Latn',  // Slavic + Latvian with transliteration
-            'kbd_Cyrl', 'kaz_Cyrl',                          // Caucasian/Turkic with direct TTS
+            'rus_Cyrl', 'ukr_Cyrl', 'bel_Cyrl', 'lvs_Latn',  // Slavic + Latvian with transliteration
+            'kbd_Cyrl', 'kaz_Cyrl', 'bak_Cyrl', 'kir_Cyrl',  // Caucasian/Turkic with direct TTS
             'tur_Latn', 'azj_Latn', 'kat_Geor', 'hye_Armn',  // with transliteration
             'deu_Latn', 'spa_Latn'                           // German and Spanish with transliteration
         ];
