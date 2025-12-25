@@ -1,4 +1,4 @@
-# .gitignore for Kabardian Translator v1.0.3
+# .gitignore for Kabardian Translator v2.0.0
 
 # ============================================
 # MODELS (DO NOT COMMIT - too large!)
@@ -8,17 +8,17 @@ models/
 *.safetensors
 *.ot
 *.msgpack
+*.model
+*.h5
+*.pkl
+*.pt
+*.pth
 
-# ============================================
-# Benchmark generated files (v1.0.3)
-# ============================================
-benchmarks/benchmark_results_*.json
-benchmarks/benchmark_ru_kbd_*.csv
-benchmarks/benchmark_kbd_ru_*.csv
-benchmarks/BENCHMARK_REPORT_*.md
-
-# Keep static reference
-!benchmarks/BENCHMARK_500.md
+# Model directories
+marian_ru_kbd/
+marian_kbd_ru/
+nllb200/
+silero/
 
 # ============================================
 # Python
@@ -28,12 +28,14 @@ venv/
 env/
 ENV/
 .venv/
+.virtualenv/
 
 # Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.pyc
+*.pyo
 *.so
 
 # Package management
@@ -43,6 +45,8 @@ pip-log.txt
 build/
 dist/
 *.egg-info/
+*.egg
+.eggs/
 
 # Unit test / coverage reports
 htmlcov/
@@ -57,15 +61,24 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.pytest_cache/
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+profile_default/
+ipython_config.py
 
 # mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
 
 # ============================================
 # Application temporary files
@@ -76,15 +89,23 @@ temp_audio/
 *.wav
 *.mp3
 *.ogg
+*.flac
+audio_cache/
 
 # Logs
 *.log
 logs/
+*.log.*
 
 # Databases
 *.db
 *.sqlite
 *.sqlite3
+
+# Cache directories
+.cache/
+cache/
+__pycache__/
 
 # ============================================
 # IDEs and editors
@@ -92,21 +113,28 @@ logs/
 # VS Code
 .vscode/
 *.code-workspace
+.history/
 
 # PyCharm
 .idea/
 *.iml
 *.ipr
 *.iws
+.idea_modules/
 
 # Sublime Text
 *.sublime-project
 *.sublime-workspace
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
 
 # Vim
 *.swp
 *.swo
 *~
+.netrwhist
+Session.vim
 
 # Emacs
 *~
@@ -118,6 +146,13 @@ auto-save/
 tramp
 .\#*
 
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
 # ============================================
 # macOS
 # ============================================
@@ -127,14 +162,23 @@ tramp
 ._*
 .Spotlight-V100
 .Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.DocumentRevisions-V100
+.TemporaryItems
+.apdisk
 
 # ============================================
 # Windows
 # ============================================
 Thumbs.db
+Thumbs.db:encryptable
 ehthumbs.db
+ehthumbs_vista.db
 Desktop.ini
 $RECYCLE.BIN/
+*.stackdump
 
 # Windows Installer files
 *.cab
@@ -143,33 +187,76 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# Windows shortcuts
+*.lnk
+
 # ============================================
 # Linux
 # ============================================
 *~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
 # ============================================
-# Project specific
+# Project specific (v2.0.0)
 # ============================================
 # Saved checkpoints
 checkpoints/
 saved_models/
+experiments/
 
 # Hugging Face cache
 .huggingface/
+.transformers_cache/
 
 # Environment configuration
 .env
 .env.local
 .env.*.local
+.envrc
 
 # Flask temporary files
 instance/
 .webassets-cache
+flask_session/
 
 # Silero TTS cache
 ~/.cache/torch/
 ~/.cache/torch/hub/
+torch_extensions/
+
+# Translation cache
+translation_cache/
+*.cache
+
+# User uploads
+uploads/
+user_data/
+
+# Development databases
+dev.db
+test.db
+
+# ============================================
+# Documentation builds
+# ============================================
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# ============================================
+# Package distribution
+# ============================================
+*.tar.gz
+*.zip
+*.tar
+*.whl
+*.dmg
+*.deb
+*.rpm
 
 # ============================================
 # OS generated
@@ -177,3 +264,25 @@ instance/
 Icon?
 ehthumbs.db
 Thumbs.db
+.directory
+
+# ============================================
+# Security and credentials
+# ============================================
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ============================================
+# Temporary files
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+~$*
