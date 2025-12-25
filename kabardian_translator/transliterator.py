@@ -1,17 +1,18 @@
 # transliterator_final.py
-# Улучшенная транслитерация для TTS с точной фонетической передачей
-# + Восстановлена логика детекции языков и обработки из оригинала
+# Enhanced transliteration for TTS with accurate phonetic representation
+# + Restored language detection and processing logic from original code
+# Version: 2.0.0
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
 
 import re
 
 class TransliteratorFinal:
     """
-    Улучшенный транслитератор с максимально точной передачей фонетики.
-    ВОССТАНОВЛЕНА РАБОЧАЯ ЛОГИКА ИЗ ОРИГИНАЛЬНОГО КОДА:
+    Enhanced transliterator with maximum phonetic accuracy.
+    RESTORED WORKING LOGIC FROM ORIGINAL CODE:
     - detect_script
-    - Правильная обработка границ слов
-    - Рабочий функционал
+    - Proper word boundary handling
+    - Working functionality
     """
     
     def __init__(self):
@@ -20,7 +21,7 @@ class TransliteratorFinal:
     def setup_transliteration_rules(self):
         """Setup transliteration rules"""
         
-        # ТУРЕЦКИЙ (Latin) → Казахская кириллица
+        # TURKISH (Latin) → Kazakh Cyrillic
         self.turkish_to_kazakh = {
             'a': 'а', 'A': 'А',
             'b': 'б', 'B': 'Б', 
@@ -53,7 +54,7 @@ class TransliteratorFinal:
             "'": "", "’": ""
         }
         
-        # АЗЕРБАЙДЖАНСКИЙ (Latin) → Казахская кириллица  
+        # AZERBAIJANI (Latin) → Kazakh Cyrillic  
         self.azerbaijani_to_kazakh = {
             'a': 'а', 'A': 'А',
             'b': 'б', 'B': 'Б',
@@ -156,7 +157,7 @@ class TransliteratorFinal:
             'y': 'ю', 'Y': 'Ю',
             'z': 'ц', 'Z': 'Ц',
             
-            # Умлауты
+            # Umlauts
             'ä': 'э', 'Ä': 'Э',
             'ö': 'ө', 'Ö': 'Ө',
             'ü': 'йю', 'Ü': 'Йю',
@@ -241,9 +242,9 @@ class TransliteratorFinal:
             'Օ': 'О', 'Ֆ': 'Ф', 'ՈՒ': 'У', 'ԵՎ': 'Ев',
         }
         
-        # СПЕЦИАЛЬНЫЕ ПРАВИЛА
+        # SPECIAL RULES
         
-        # Латышские правила
+        # Latvian rules
         self.latvian_special_rules = [
             (r'ch', 'х'), (r'Ch', 'Х'), (r'CH', 'Х'),
             (r'dz', 'дз'), (r'Dz', 'Дз'), (r'DZ', 'Дз'),
@@ -251,21 +252,21 @@ class TransliteratorFinal:
             (r'ie', 'ие'), (r'Ie', 'Ие'), (r'IE', 'Ие'),
         ]
         
-        # Немецкие правила (УЛУЧШЕННЫЕ)
+        # German rules (IMPROVED)
         self.german_special_rules = [
-            # 4-символьные комбинации
+            # 4-character combinations
             (r'tsch', 'ч'), (r'Tsch', 'Ч'), (r'TSCH', 'Ч'),
             
-            # 3-символьные комбинации
+            # 3-character combinations
             (r'sch', 'ш'), (r'Sch', 'Ш'), (r'SCH', 'Ш'),
             
-            # 2-символьные: дифтонги
+            # 2-character: diphthongs
             (r'ie', 'ии'), (r'Ie', 'Ии'), (r'IE', 'ИИ'),
             (r'ei', 'ай'), (r'Ei', 'Ай'), (r'EI', 'Ай'),
             (r'eu', 'ой'), (r'Eu', 'Ой'), (r'EU', 'Ой'),
             (r'äu', 'ой'), (r'Äu', 'Ой'), (r'ÄU', 'Ой'),
             
-            # 2-символьные: гласные с h (удвоение для долготы)
+            # 2-character: vowels with h (doubling for length)
             (r'oh', 'оо'), (r'Oh', 'Оо'), (r'OH', 'ОО'),
             (r'ah', 'аа'), (r'Ah', 'Аа'), (r'AH', 'АА'),
             (r'eh', 'ээ'), (r'Eh', 'Ээ'), (r'EH', 'ЭЭ'),
@@ -275,14 +276,14 @@ class TransliteratorFinal:
             (r'öh', 'өө'), (r'Öh', 'Өө'), (r'ÖH', 'ӨӨ'),
             (r'üh', 'йю'), (r'Üh', 'Йю'), (r'ÜH', 'Йю'),
             
-            # 2-символьные: согласные комбинации
+            # 2-character: consonant combinations
             (r'ch', 'х'), (r'Ch', 'Х'), (r'CH', 'Х'),
             (r'ck', 'к'), (r'Ck', 'к'), (r'CK', 'К'),
             (r'ph', 'ф'), (r'Ph', 'Ф'), (r'PH', 'Ф'),
             (r'th', 'т'), (r'Th', 'Т'), (r'TH', 'Т'),
         ]
         
-        # Испанские правила
+        # Spanish rules
         self.spanish_special_rules = [
             (r'ch', 'ч'), (r'Ch', 'Ч'), (r'CH', 'Ч'),
             (r'll', 'й'), (r'Ll', 'Й'), (r'LL', 'Й'),
@@ -302,18 +303,18 @@ class TransliteratorFinal:
             (r'güi', 'гви'), (r'Güi', 'Гви'), (r'GÜI', 'гви'),
         ]
         
-        # Армянские правила
+        # Armenian rules
         self.armenian_special_rules = [
             (r'ու', 'у'), (r'ՈՒ', 'У'),
             (r'և', 'ев'),
         ]
         
-        # Грузинские правила
+        # Georgian rules
         self.georgian_special_rules = [
             (r'ღ', 'гъ'), (r'Ღ', 'Гъ'),
         ]
         
-        # Турецкие правила для ğ
+        # Turkish rules for ğ
         self.turkish_special_rules = [
             (r'([aeiouöüıAEİOUÖÜI])ğ([aeiouöüıAEİOUÖÜI])', r'\1й\2'),
             (r'([aeiouöüıAEİOUÖÜI])ğ\b', r'\1\1'),
@@ -373,7 +374,7 @@ class TransliteratorFinal:
         return 'unknown'
     
     def transliterate_turkish_with_context(self, text):
-        """Турецкая транслитерация с обработкой ğ"""
+        """Turkish transliteration with ğ handling"""
         for pattern, replacement in self.turkish_special_rules:
             text = re.sub(pattern, replacement, text)
         
@@ -387,7 +388,7 @@ class TransliteratorFinal:
         return ''.join(result)
     
     def transliterate_german_with_boundaries(self, text):
-        """Немецкая транслитерация с обработкой границ слов"""
+        """German transliteration with word boundary handling"""
         result = []
         i = 0
         text_length = len(text)
@@ -396,7 +397,7 @@ class TransliteratorFinal:
             char = text[i]
             matched = False
             
-            # sp/st в начале слов
+            # sp/st at word beginnings
             if self.is_word_boundary(text, i):
                 if i + 2 <= text_length and text[i:i+2].lower() == 'sp':
                     result.append('шп' if text[i:i+2].islower() else 'Шп')
@@ -408,16 +409,16 @@ class TransliteratorFinal:
                     matched = True
             
             if not matched:
-                # s перед гласной в начале слова/слога = [z] → "з"
+                # s before vowel at word/syllable beginning = [z] → "з"
                 if char.lower() == 's' and self.is_word_boundary(text, i):
-                    # Проверяем, что после s идет гласная
+                    # Check that vowel follows s
                     if i + 1 < text_length and text[i+1].lower() in 'aeiouäöü':
                         result.append('з' if char.islower() else 'З')
                         i += 1
                         matched = True
             
             if not matched:
-                # Сначала проверяем специальные правила
+                # First check special rules
                 for pattern, replacement in self.german_special_rules:
                     pattern_len = len(pattern)
                     if i + pattern_len <= text_length and text[i:i+pattern_len] == pattern:
@@ -427,14 +428,14 @@ class TransliteratorFinal:
                         break
             
             if not matched:
-                # er в конце слов
+                # er at word endings
                 if i + 2 <= text_length and text[i:i+2].lower() == 'er' and self.is_word_boundary(text, i+2):
                     result.append('а' if text[i:i+2].islower() else 'А')
                     i += 2
                     matched = True
             
             if not matched:
-                # Обычная замена символов
+                # Regular character replacement
                 if char in self.german_to_hybrid:
                     result.append(self.german_to_hybrid[char])
                 else:
@@ -444,7 +445,7 @@ class TransliteratorFinal:
         return ''.join(result)
 
     def transliterate_spanish_with_boundaries(self, text):
-        """Испанская транслитерация"""
+        """Spanish transliteration"""
         result = []
         i = 0
         text_length = len(text)
@@ -453,7 +454,7 @@ class TransliteratorFinal:
             char = text[i]
             matched = False
             
-            # r в начале слова
+            # r at word beginning
             if char.lower() == 'r' and self.is_word_boundary(text, i):
                 result.append('рр' if char.islower() else 'Рр')
                 i += 1
@@ -478,7 +479,7 @@ class TransliteratorFinal:
         return ''.join(result)
     
     def transliterate_latvian_with_boundaries(self, text):
-        """Латышская транслитерация"""
+        """Latvian transliteration"""
         result = []
         i = 0
         text_length = len(text)
@@ -487,7 +488,7 @@ class TransliteratorFinal:
             char = text[i]
             matched = False
             
-            # o в начале/конце слова
+            # o at word beginning/end
             if char.lower() == 'o':
                 if self.is_word_boundary(text, i) or (i == text_length - 1) or self.is_word_boundary(text, i + 1):
                     result.append('уо' if char.islower() else 'Уо')
@@ -513,7 +514,7 @@ class TransliteratorFinal:
         return ''.join(result)
     
     def transliterate_georgian_direct(self, text):
-        """Грузинская транслитерация"""
+        """Georgian transliteration"""
         for pattern, replacement in self.georgian_special_rules:
             text = re.sub(pattern, replacement, text)
         
@@ -527,7 +528,7 @@ class TransliteratorFinal:
         return ''.join(result)
     
     def transliterate_armenian_direct(self, text):
-        """Армянская транслитерация"""
+        """Armenian transliteration"""
         for pattern, replacement in self.armenian_special_rules:
             text = re.sub(pattern, replacement, text)
         
@@ -541,7 +542,7 @@ class TransliteratorFinal:
         return ''.join(result)
     
     def transliterate_azerbaijani_direct(self, text):
-        """Азербайджанская транслитерация"""
+        """Azerbaijani transliteration"""
         result = []
         for char in text:
             if char in self.azerbaijani_to_kazakh:
@@ -566,7 +567,7 @@ class TransliteratorFinal:
             elif source_lang == 'azj_Latn':
                 transliterated = self.transliterate_azerbaijani_direct(text)
                 
-            elif source_lang == 'lav_Latn':
+            elif source_lang == 'lvs_Latn':
                 transliterated = self.transliterate_latvian_with_boundaries(text)
                 target_script = 'hybrid'
                 
@@ -602,13 +603,13 @@ class TransliteratorFinal:
         """
         Checks if transliteration is needed for the language
         """
-        return lang_code in ['tur_Latn', 'azj_Latn', 'kat_Geor', 'hye_Armn', 'lav_Latn', 'deu_Latn', 'spa_Latn']
+        return lang_code in ['tur_Latn', 'azj_Latn', 'kat_Geor', 'hye_Armn', 'lvs_Latn', 'deu_Latn', 'spa_Latn']
     
     def get_target_speaker(self, lang_code):
         """
         Determines which speaker to use after transliteration
         """
-        if lang_code in ['lav_Latn', 'deu_Latn', 'spa_Latn']:
+        if lang_code in ['lvs_Latn', 'deu_Latn', 'spa_Latn']:
             return 'ru_eduard'
         return 'kbd_eduard'
 
@@ -619,7 +620,7 @@ transliterator = TransliteratorFinal()
 def test_transliteration():
     """Testing transliteration with word boundaries"""
     test_cases = [
-        # German examples - ОБНОВЛЕННЫЕ!
+        # German examples - UPDATED!
         ('deu_Latn', 'sport', 'шпорт'),
         ('deu_Latn', 'Student', 'Штудент'),
         ('deu_Latn', 'Hallo', 'Халло'),
@@ -647,9 +648,9 @@ def test_transliteration():
         ('spa_Latn', 'llamar', 'йамар'),
         
         # Latvian examples
-        ('lav_Latn', 'labdien', 'лабдиен'),
-        ('lav_Latn', 'paldies', 'палдиес'),
-        ('lav_Latn', 'Rīga', 'Рийга'),
+        ('lvs_Latn', 'labdien', 'лабдиен'),
+        ('lvs_Latn', 'paldies', 'палдиес'),
+        ('lvs_Latn', 'Rīga', 'Рийга'),
         
         # Georgian examples
         ('kat_Geor', 'გამარჯობა', 'гамарджоба'),
