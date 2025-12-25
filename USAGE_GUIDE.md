@@ -1,345 +1,657 @@
-# Quick Start Guide
+# Usage Guide
 
-## 🎯 First Launch (Recommended)
+## Quick Start
 
-**1. Check Python version (requires 3.11+):**  
+### Prerequisites
+
+**Python 3.11 or higher** (required for Silero Stress)
+
+Check your Python version:  
 
 ```bash
 python --version
 # or
 python3 --version
-```
+```   
 
-**2. Create virtual environment with Python 3.11:**  
+If you need Python 3.11+, download from [python.org](https://www.python.org/downloads/). 
+
+---  
+
+## Installation
+
+### Standard Installation (Recommended)
+
+**1. Create virtual environment:**
 
 ```bash
+# Linux/macOS
 python3.11 -m venv venv
-```
-
-**3. Activate virtual environment:**  
-
-```bash
-# Linux/Mac:
 source venv/bin/activate
 
-# Windows:
-venv\Scripts\activate
+# Windows
+python -m venv venv
+venv\Scripts\activate.bat
 ```
 
-**4. Install from PyPI:**  
+**2. Install package:**
 
 ```bash
 pip install kabardian-translator
 ```
 
-**5. Download AI models (~3GB):**  
+**3. Download models (~2.9GB):**
 
 ```bash
 kabardian-download-models
 ```
 
-**6. Launch the application:**  
+**4. Launch application:**
 
 ```bash
 kabardian-translator
 ```
 
-**7. Open in browser:** http://localhost:5500
+**5. Open browser:**
+
+Navigate to `http://localhost:5500`
 
 ---
 
-## 🛠️ Alternative: Development Setup
+### Windows-Specific Installation
+
+**1. Verify Python installation:**
+
+```bash
+python --version
+```
+
+If Python not found, try:  
+
+```bash
+py --version
+python3 --version
+```
+
+**2. Create virtual environment:**
+
+```bash
+python -m venv venv
+venv\Scripts\activate.bat
+```
+
+If `pip` command not found, use:    
+
+```bash
+python -m pip install kabardian-translator
+```   
+
+**3. Download models:**
+
+```bash
+python -m kabardian_translator.download_models
+# or
+kabardian-download-models
+```
+
+**4. Launch:**
+
+```bash
+python -m kabardian_translator.cli
+# or
+kabardian-translator
+```
+
+**Common Windows issues:**  
+- If port 5500 blocked: use `--port 8080`  
+- If browser shows security warning: click "Advanced" → "Proceed to localhost"  
+- If SSL errors: add `--trusted-host pypi.org --trusted-host files.pythonhosted.org` to pip commands  
+
+---  
+
+### Development Installation
 
 **From GitHub source:**
 
 ```bash
-# Clone repository
 git clone https://github.com/kubataba/kabardian-translator.git
 cd kabardian-translator
 
-# Check Python version
-python3.11 --version
-
-# Create virtual environment
+# Linux/macOS
 python3.11 -m venv venv
+source venv/bin/activate
 
-# Activate
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Windows
+python -m venv venv
+venv\Scripts\activate.bat
 
-# Install in development mode
+# Install dependencies
+pip install -r requirements.txt
 pip install -e .
 
 # Download models
 kabardian-download-models
 
-# Run application
-kabardian-translator
+# Launch
+python -m kabardian_translator.cli
 ```
 
 ---
 
-## 📦 Installation Modes (v1.0.3)
+## Model Installation Options
 
-**Minimal Installation** (Kabardian ↔ Russian only):  
+**Full installation** (all features):  
+
+```bash
+kabardian-download-models --full  # ~2.9GB
+```  
+
+Components:  
+- MarianMT RU↔KBD models (~600MB)  
+- NLLB-200 multilingual model (~2.3GB)  
+- Silero TTS model (~50MB, auto-downloaded on first use)  
+
+**Minimal installation** (Kabardian↔Russian only):    
 
 ```bash
 kabardian-download-models --minimal  # ~600MB
 ```  
 
-**Full Installation** (All 14 languages):  
+Components:  
+- MarianMT RU↔KBD models only  
+- No multilingual support  
+
+**Base NLLB-200 only**:    
 
 ```bash
-kabardian-download-models --full     # ~3GB
+kabardian-download-models --base-only  # ~2.3GB
 ```  
 
+Components:  
+- NLLB-200 for 200+ languages  
+- No specialized Kabardian models  
+
+---    
+
+## Application Features  
+
+### Translation Modes  
+
+**Direct translation** (Russian ↔ Kabardian):  
+- Uses specialized MarianMT models  
+- Best quality: BLEU 28.13 (KBD→RU), 18.65 (RU→KBD)  
+- Fastest performance: 37-144ms per sentence  
+
+**Cascade translation** (Other languages ↔ Kabardian):    
+- Routes through Russian as pivot language  
+- Two-step process via NLLB-200 + MarianMT  
+- Latency: 100-300ms per sentence  
+
+**Multilingual translation** (between other languages):    
+- Direct via NLLB-200  
+- 200+ language pairs  
+- Quality varies by language pair  
+
+### Voice Synthesis  
+
+**Cyrillic languages** (direct TTS):    
+- Russian, Ukrainian, Belarusian: Silero Stress (95-98% accuracy)  
+- Kabardian, Kazakh, Bashkir, Kyrgyz: SimpleAccentor (85-90% accuracy)  
+- Full automatic stress marking  
+
+**Non-Cyrillic languages** (via transliteration):    
+- Georgian → Kabardian Cyrillic (preserves ejectives)  
+- Armenian → Hybrid Cyrillic (Kazakh+Kabardian phonemes)  
+- Turkish/Azerbaijani → Kazakh Cyrillic  
+- German/Spanish/Latvian → Hybrid Cyrillic  
+- Quality: 75-85% accuracy  
+
+**TTS usage:**  
+- Click speaker icon next to text  
+- Maximum 200 characters per synthesis  
+- Audio plays automatically  
+- Transliterated preview shown for non-Cyrillic  
+
+### Interface Controls  
+
+**Keyboard shortcuts:**  
+- `Ctrl+Enter` - Translate text  
+- `Ctrl+→` - Swap source/target languages  
+- `Ctrl+Space` - Synthesize speech  
+- `Ctrl+C` - Copy translation  
+
+**UI elements:**  
+- Language selector dropdowns  
+- Theme toggle (dark/light mode)  
+- UI language switcher (Russian/English)  
+- Clear buttons for text areas  
+- Download audio button (after synthesis)  
+
+---  
+
+## Language Support  
+
+### Translation Support  
+
+| Language | Code | Translation Quality | Notes |
+|----------|------|---------------------|-------|
+| Kabardian | kbd_Cyrl | Excellent (via MarianMT) | Specialized models |
+| Russian | rus_Cyrl | Excellent (via MarianMT) | Specialized models |
+| Ukrainian | ukr_Cyrl | Very Good (via NLLB-200) | High-resource |
+| Belarusian | bel_Cyrl | Very Good (via NLLB-200) | High-resource |
+| Kazakh | kaz_Cyrl | Good (via NLLB-200) | Mid-resource |
+| Bashkir | bak_Cyrl | Good (via NLLB-200) | Low-resource |
+| Kyrgyz | kir_Cyrl | Good (via NLLB-200) | Low-resource |
+| Georgian | kat_Geor | Good (via NLLB-200) | Mid-resource |
+| Armenian | hye_Armn | Good (via NLLB-200) | Mid-resource |
+| Turkish | tur_Latn | Very Good (via NLLB-200) | High-resource |
+| Azerbaijani | azj_Latn | Good (via NLLB-200) | Mid-resource |
+| English | eng_Latn | Excellent (via NLLB-200) | High-resource |
+| German | deu_Latn | Excellent (via NLLB-200) | High-resource |
+| French | fra_Latn | Excellent (via NLLB-200) | High-resource |
+| Spanish | spa_Latn | Excellent (via NLLB-200) | High-resource |
+| Latvian | lvs_Latn | Very Good (via NLLB-200) | Mid-resource |
+
+**Plus 185+ additional languages via NLLB-200**  
+
+### TTS Support  
+
+| Language | Accent Quality | Method |
+|----------|----------------|--------|
+| Russian | 98% | Silero Stress |
+| Ukrainian | 95% | Silero Stress |
+| Belarusian | 95% | Silero Stress |
+| Kabardian | 90% | SimpleAccentor |
+| Kazakh | 90% | SimpleAccentor |
+| Bashkir | 88% | SimpleAccentor |
+| Kyrgyz | 87% | SimpleAccentor |
+| Georgian | 85% | Transliteration + Accents |
+| Armenian | 85% | Transliteration + Accents |
+| Turkish | 80% | Transliteration + Accents |
+| Azerbaijani | 80% | Transliteration + Accents |
+| German | 75% | Transliteration + Accents |
+| Spanish | 75% | Transliteration + Accents |
+| Latvian | 75% | Transliteration + Accents |
+
 ---
 
-## 🔧 Key Features
+## System Requirements  
 
-### Translation Modes
-- **Direct**: Russian ↔ Kabardian (specialized 80M parameter models)
-- **Cascade**: Other languages via Russian
-- **Base**: Direct for supported pairs using M2M100 418M
+### Minimum Configuration  
+- **Python**: 3.11 or higher
+- **RAM**: 4GB
+- **Storage**: 3GB free space
+- **OS**: Windows 10+, macOS 10.14+, Linux
 
-### Voice Synthesis
-- Click speaker icons for TTS
-- Automatic transliteration for 7 languages
-- Preview shows transliterated text
-- Uses Silero TTS V5 CIS model
-
-### Interface Tips
-- `Ctrl+Enter` - translate
-- `Ctrl+→` - swap languages  
-- `Ctrl+Space` - speak text
-- Theme toggle in top-right
-- Language switcher (RU/EN) in header
-
----
-
-## 🌍 Supported Languages
-
-### With Direct Voice Synthesis
-- **Russian, Ukrainian, Belarusian** - `ru_eduard` speaker
-- **Kabardian, Kazakh** - `kbd_eduard` speaker
-
-### With Transliteration + Voice
-- **Turkish, Azerbaijani** → Kabardian speaker
-- **Georgian, Armenian** → Kabardian speaker  
-- **German, Spanish, Latvian** → Russian speaker
-
-### Translation Only
-- **English, French**
-
----
-
-## 🔄 Translation Workflow
-
-### Direct Translation (Fast)
-- Russian ↔ Kabardian (Specialized Opus-MT 80M models)
-- Between Slavic languages (M2M100 418M)
-- Between European languages (M2M100 418M)
-
-### Cascade Translation (High Quality)
-- Any language → Kabardian (via Russian)
-- Kabardian → Any language (via Russian)
-
----
-
-## 📊 Voice Synthesis Features
-
-### Automatic Transliteration
-- **Georgian/Armenian alphabets** → Cyrillic for readability
-- **Turkish/Azerbaijani** → Kazakh Cyrillic for pronunciation
-- **German/Spanish/Latvian** → Hybrid Cyrillic
-
-### Quality Levels
-- **95-98%**: Russian, Ukrainian, Belarusian
-- **92-95%**: Kabardian, Kazakh  
-- **88-92%**: Georgian, Armenian (transliterated)
-- **85-88%**: Turkish, Azerbaijani (transliterated)
-- **78-82%**: German, Spanish, Latvian (transliterated)
-
----
-
-## ⚡ Performance Tips
-
-### System Requirements (v1.0.3)
-- **Minimum**: 4GB RAM (basic Kabardian ↔ Russian)
-- **Recommended**: 8GB RAM (all 14 languages)
-- **Optimal**: 16GB RAM (Apple Silicon with MPS acceleration)
-- **Storage**: ~3GB (down from ~15GB in v1.0)
-
-### Apple Silicon Optimization
-- Uses Metal Performance Shaders (MPS) when available
-- Float32 precision for stability
-- Lazy loading of TTS model
-
-### Expected Performance
-
-**On 4GB RAM Computer:**
-- Startup: ~5 seconds
-- RU↔KBD translation: 200-600ms
+Performance with 4GB RAM:  
+- Startup: 3-5 seconds
+- Translation: 50-200ms per sentence
 - Memory usage: ~2GB peak
+- Recommended: minimal installation
 
-**On 8GB RAM Computer:**
-- Startup: ~8 seconds
-- Any translation: 300-800ms
+### Recommended Configuration  
+- **Python**: 3.11 or higher
+- **RAM**: 8GB
+- **Storage**: 5GB free space
+- **OS**: Windows 10+, macOS 10.14+, Linux
+
+Performance with 8GB RAM:  
+- Startup: 5-8 seconds
+- Translation: 50-150ms per sentence
+- TTS synthesis: 1-2 seconds
+- Memory usage: ~3GB peak
+
+### Optimal Configuration  
+- **Python**: 3.11 or higher
+- **RAM**: 16GB
+- **Storage**: 5GB free space
+- **GPU/MPS**: Optional hardware acceleration
+
+Performance with 16GB RAM + MPS:  
+- Startup: 8-10 seconds
+- Translation: 20-100ms per sentence
+- TTS synthesis: 0.5-1 second
 - Memory usage: ~4GB peak
 
-**On Apple Silicon (16GB RAM):**
-- Startup: ~10 seconds
-- MPS-accelerated translation: 150-400ms
-- TTS Synthesis: 1-2 seconds
-- Memory usage: ~6GB peak
-
-### Memory Management
-- Automatic cleanup on exit
-- Temporary audio file deletion
-- Cache clearing between operations
-
 ---
 
-## 🛠️ Troubleshooting  
+## CLI Options  
 
-### Common Issues
-
-**Models won't download:**    
+**Basic usage:**  
 
 ```bash
-# Use mirror if Hugging Face is blocked
+kabardian-translator
+```  
+
+**Custom configuration:**  
+
+```bash
+# Custom port
+kabardian-translator --port 8080
+
+# Localhost only (more secure)
+kabardian-translator --host localhost --port 5500
+
+# Force CPU mode (disable GPU/MPS)
+kabardian-translator --cpu-only
+
+# Verbose logging
+kabardian-translator --verbose
+```  
+
+**Command-line translation:**  
+
+```bash
+# Translate text directly
+kabardian-translate --text "Hello world" --source eng_Latn --target rus_Cyrl
+
+# From file
+kabardian-translate --file input.txt --source eng_Latn --target kbd_Cyrl
+
+# Help
+kabardian-translate --help
+```  
+
+**Environment variables:**  
+
+```bash
+# Batch size (lower = less memory)
+export KBD_TRANSLATE_BATCH_SIZE=4
+
+# Custom model directory
+export KBD_MODELS_PATH=/path/to/models
+
+# Force CPU mode
+export KBD_FORCE_CPU=1
+
+# Launch
+kabardian-translator
+```  
+
+---  
+
+## Troubleshooting
+
+### Installation Issues  
+
+**Python version error:**  
+
+```bash
+# Check current version
+python --version
+
+# Install Python 3.11+ from python.org
+# Then create new environment
+python3.11 -m venv venv
+```  
+
+**pip not found (Windows):**  
+
+```bash
+# Use module form
+python -m pip install kabardian-translator
+
+# Or upgrade pip
+python -m pip install --upgrade pip
+```  
+
+**Virtual environment issues:**  
+
+```bash
+# Remove old environment
+rm -rf venv  # Linux/macOS
+rmdir /s venv  # Windows
+
+# Create fresh environment
+python3.11 -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate.bat
+pip install kabardian-translator
+```  
+
+### Model Download Issues  
+
+**Slow download:**  
+
+```bash
+# Use mirror (if primary site slow)
 export HF_ENDPOINT=https://hf-mirror.com
 kabardian-download-models
-```
+```  
 
-**Low RAM (4GB systems):**
+**Download fails:**  
 
 ```bash
-# Minimal installation
+# Clear cache and retry
+rm -rf ~/.cache/huggingface  # Linux/macOS
+rmdir /s %USERPROFILE%\.cache\huggingface  # Windows
+
+# Manual download
+python -c "from kabardian_translator import ensure_models_downloaded; ensure_models_downloaded()"
+```  
+
+**Disk space issues:**  
+
+```bash
+# Check available space
+df -h  # Linux/macOS
+dir  # Windows
+
+# Use minimal installation
 kabardian-download-models --minimal
+```  
+
+### Runtime Issues  
+
+**Out of memory:**  
+
+```bash
+# Reduce batch size
+export KBD_TRANSLATE_BATCH_SIZE=1
 
 # Force CPU mode
 kabardian-translator --cpu-only
-```
 
-**Out of memory (Apple Silicon with 8GB RAM):**  
+# Use minimal installation
+kabardian-download-models --minimal
+```  
 
-```bash
-# Force CPU mode
-export PYTORCH_ENABLE_MPS_FALLBACK=1
-kabardian-translator
-```
-
-**Command not found after pip install:**  
+**Port already in use:**  
 
 ```bash
-# Reinstall
-pip uninstall kabardian-translator
-pip install kabardian-translator
+# Find process using port
+lsof -i :5500  # Linux/macOS
+netstat -ano | findstr :5500  # Windows
 
-# Or run directly
-python -m kabardian_translator.cli
-```
+# Kill process or use different port
+kabardian-translator --port 8080
+```  
 
-**TTS not working:** 
- 
-- Check internet connection (first load downloads model)
-- Verify console for error messages
-- Check audio output device
+**TTS not working:**  
 
----
+```bash
+# Check Silero Stress installation
+pip install silero_stress
 
-## ⌨️ Keyboard Shortcuts Reference  
+# Verify internet connection (first load downloads model)
+# Check console for error messages
+# Test with: python -c "from kabardian_translator.tts_service import TTSService; tts = TTSService()"
+```  
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Enter` | Translate text |
-| `Ctrl+→` | Swap languages |
-| `Ctrl+Space` | Speak selected text |
-| `Ctrl+C` | Copy translation |
+**Browser shows security warning:**  
+- Normal for localhost servers
+- Click "Advanced" → "Proceed to localhost"
+- Or type `thisisunsafe` on warning page (Chrome)
+- Or use Firefox/Edge (more permissive for localhost)
 
----
+### Performance Issues
 
-## 📁 Project Structure
+**Slow startup:**  
+
+```bash
+# Normal for first launch (model loading)
+# Subsequent launches faster due to caching
+# Use --verbose to see loading progress
+kabardian-translator --verbose
+```  
+
+**Slow translation:**  
+
+```bash
+# Check system resources
+# Close other applications
+# Use CPU mode if GPU/MPS unstable
+kabardian-translator --cpu-only
+```  
+
+**Memory leaks:**  
+
+```bash
+# Restart application periodically
+# Clear browser cache
+# Check for console errors
+```  
+
+---  
+
+## System Check  
+
+**Verify installation:**  
+
+```bash
+# Check package
+pip list | grep kabardian
+
+# Check models
+python -c "from kabardian_translator import check_models; check_models()"
+
+# Check PyTorch
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, MPS: {torch.backends.mps.is_available()}')"
+
+# Check Silero Stress
+python -c "import silero_stress; print('Silero Stress OK')"
+```  
+
+**Test translation:**  
+
+```bash
+kabardian-translate --text "Test" --source eng_Latn --target rus_Cyrl
+```  
+
+**Test TTS:**  
+
+```bash
+python -c "
+from kabardian_translator.tts_service import TTSService
+tts = TTSService()
+tts.synthesize('Тест', 'rus_Cyrl', 'ru_eduard')
+print('TTS OK')
+"
+```  
+
+---  
+
+## Use Cases  
+
+### Language Learning  
+- Practice pronunciation with TTS
+- Compare translations across languages
+- Study transliteration patterns
+- Learn Kabardian phonetics
+
+### Teaching  
+- Generate audio examples for lessons
+- Create multilingual materials
+- Demonstrate phonetic representations
+- Prepare comparative language exercises
+
+### Research  
+- Analyze translation quality (see benchmarks)
+- Study low-resource NLP
+- Test transliteration accuracy
+- Compare model performance
+- Document endangered languages
+
+### Community Use  
+- Accessible tool for native speakers
+- Support for language preservation
+- Cultural heritage documentation
+- Cross-linguistic communication
+
+---  
+
+## Project Structure
 
 ```
 kabardian-translator/
-├── kabardian_translator/  # Python package
+├── kabardian_translator/     # Main package
 │   ├── __init__.py
-│   ├── app.py            # Main application
-│   ├── translation_service.py
-│   ├── tts_service.py
-│   ├── transliterator.py
-│   ├── tokenizer_manager.py
-│   └── cli.py           # CLI entry point
-├── benchmarks/          # Reproducible tests (v1.0.3)
-│   ├── README.md
-│   ├── requirements.txt
-│   ├── bench.py
-│   └── BENCHMARK_500.md
-├── setup.py             # Package configuration
-├── requirements.txt     # Dependencies
-├── download_models.py   # Model downloader
-└── models/             # AI models (created after download)
+│   ├── cli.py               # CLI entry point
+│   ├── app.py               # Flask application
+│   ├── models/              # Model management
+│   ├── translation/         # Translation pipeline
+│   ├── tts/                 # TTS service
+│   ├── transliteration/     # Script conversion
+│   └── web/                 # Web interface
+├── requirements.txt         # Dependencies
+├── setup.py                # Package config
+└── README.md               # Documentation
 ```
 
 ---
 
-## 🎓 Educational Use Cases
+## License
 
-### For Language Learners
-- Practice Kabardian pronunciation
-- Compare translations across languages
-- Understand phonetic structure
+**Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
 
-### For Teachers
-- Generate audio examples
-- Prepare multilingual materials
-- Demonstrate transliteration
+**Permitted:**  
+- Personal use
+- Educational purposes
+- Research projects
+- Modifications with attribution
+- Non-commercial distribution
 
-### For Researchers
-- Analyze translation quality (see benchmarks/)
-- Study phonetic representations
-- Test transliteration accuracy
-- Reproduce results with provided benchmark scripts
+**Prohibited:**  
+- Commercial services
+- Paid integrations
+- Profit-driven applications
+- Selling translations or generated content
 
----
-
-## 📏 License & Usage
-
-**Non-Commercial Educational Use Only**    
-- ✅ Personal use  
-- ✅ Educational institutions    
-- ✅ Research projects  
-- ✅ Modifications with attribution  
-
-**Prohibited**  
-- ❌ Commercial services  
-- ❌ Paid integrations  
-- ❌ Profit-driven applications  
-
-Full license: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
+Full license: https://creativecommons.org/licenses/by-nc/4.0/
 
 ---
 
-## 🆕 What's New in v1.0.3
+## Additional Resources  
 
-### Major Improvements
-- **5x smaller**: 3GB vs 15GB total size
-- **4x more efficient**: Runs on 4GB RAM minimum
-- **Better quality**: Specialized 80M Opus-MT models for RU↔KBD
-- **Reproducible benchmarks**: Full test suite in benchmarks/ folder
-
-### Technical Changes
-- Replaced M2M100 1.2B with M2M100 418M (3x lighter)
-- Added specialized Opus-MT models for Kabardian
-- Enhanced transliterator with improved phonetic rules
-- Lazy TTS loading for faster startup
+- [GitHub Repository](https://github.com/kubataba/kabardian-translator)
+- [PyPI Package](https://pypi.org/project/kabardian-translator/)
+- [Fine-tuned Models](https://huggingface.co/kubataba) - KBD↔RU MarianMT
+- [Training Corpus](https://huggingface.co/datasets/adiga-ai/circassian-parallel-corpus)
+- [Issue Tracker](https://github.com/kubataba/kabardian-translator/issues)
+- [Benchmarks](https://github.com/kubataba/kabardian-translator/tree/main/benchmarks)
 
 ---
+
+## Version History  
+
+### v2.0.0 (Current)
+- Enhanced MarianMT models (BLEU 28.13/18.65)
+- NLLB-200 integration (200+ languages)
+- Full accentuation system
+- Bashkir and Kyrgyz support
+- Silero Stress integration
+- ~2.9GB total size
+
+### v1.0.0
+- Initial M2M100-based implementation
+- Basic TTS support
+- 14 language pairs
+- ~3GB total size
+
+---  
 
 **Need help?**  
 
-- 📖 [Full Documentation](https://github.com/kubataba/kabardian-translator#readme)
-- 🐛 [Report Issues](https://github.com/kubataba/kabardian-translator/issues)
-- 📊 [Run Benchmarks](https://github.com/kubataba/kabardian-translator/tree/main/benchmarks)
-- 📦 [PyPI Page](https://pypi.org/project/kabardian-translator/)
+- Read full [README](https://github.com/kubataba/kabardian-translator#readme)
+- Check [troubleshooting section](#troubleshooting)
+- Report [issues on GitHub](https://github.com/kubataba/kabardian-translator/issues)
+- Review [benchmarks](https://github.com/kubataba/kabardian-translator/tree/main/benchmarks)
