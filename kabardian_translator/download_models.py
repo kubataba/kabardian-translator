@@ -2,7 +2,7 @@
 # download_models.py
 # Script to download models for Kabardian Translator
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
-# Version 1.0.3 - Smart model selection
+# Version 2.0.0 - Migrated to NLLB-200 model
 
 import os
 import sys
@@ -77,27 +77,30 @@ def download_marian_model(model_id, save_path, description):
         traceback.print_exc()
         return False
 
-def download_m2m100_model(model_id, save_path, description):
-    """Download M2M100 model and tokenizer"""
-    print(f"\n📥 Downloading M2M100: {description}")
+def download_nllb_model(model_id, save_path, description):
+    """Download NLLB-200 model and tokenizer"""
+    print(f"\n📥 Downloading NLLB-200: {description}")
     print(f"   Model ID: {model_id}")
     print(f"   Save path: {save_path}")
     
     try:
-        from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
         
         # Create directory
         Path(save_path).mkdir(parents=True, exist_ok=True)
         
         # Download model
         print("   ⏳ Downloading model...")
-        model = M2M100ForConditionalGeneration.from_pretrained(model_id)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
         model.save_pretrained(save_path)
-        print(f"   ✅ Model saved ({model.num_parameters()/1e9:.2f}B parameters)")
+        
+        # Get model info
+        num_params = sum(p.numel() for p in model.parameters())
+        print(f"   ✅ Model saved ({num_params/1e9:.2f}B parameters)")
         
         # Download tokenizer
         print("   ⏳ Downloading tokenizer...")
-        tokenizer = M2M100Tokenizer.from_pretrained(model_id)
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
         tokenizer.save_pretrained(save_path)
         print(f"   ✅ Tokenizer saved to {save_path}")
         
@@ -128,7 +131,7 @@ def verify_installation():
     
     # Optional but recommended
     optional = {
-        "m2m100": "Base M2M100 for other languages",
+        "nllb200": "Base NLLB-200 for other languages",
     }
     
     # Check required models
@@ -166,7 +169,7 @@ def download_minimal_models():
     print("""
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║           MINIMAL MODEL DOWNLOAD (v1.0.3)                 ║
+║           MINIMAL MODEL DOWNLOAD (v2.0.0)                 ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
@@ -178,7 +181,7 @@ Total size: ~500MB
 Download time: 1-5 minutes
 
 These models enable Kabardian ↔ Russian translations.
-For other languages, you'll need the base M2M100 model separately.
+For other languages, you'll need the base NLLB-200 model separately.
 """)
     
     response = input("Start download? (y/n): ")
@@ -226,20 +229,22 @@ For other languages, you'll need the base M2M100 model separately.
     
     return success_count == total
 
-def download_base_m2m100():
-    """Download only base M2M100 model"""
+def download_base_nllb():
+    """Download only base NLLB-200 model"""
     print("""
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║           BASE M2M100 MODEL DOWNLOAD                      ║
+║           BASE NLLB-200 MODEL DOWNLOAD                    ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
-This will download the base M2M100 model:
-  • Base M2M100 (facebook/m2m100_418M) ~1.6GB
+This will download the base NLLB-200 model:
+  • NLLB-200 Distilled 600M (facebook/nllb-200-distilled-600M) ~1.2GB
   
 This model enables translations between non-Kabardian languages:
-  English, German, French, Spanish, Turkish, etc.
+  • 200+ languages support
+  • Better quality than M2M100
+  • Modern transformer architecture
   
 Without this model, only Kabardian ↔ Russian will work.
 """)
@@ -252,20 +257,24 @@ Without this model, only Kabardian ↔ Russian will work.
     if not check_disk_space(required_gb=2):
         return False
     
-    print_progress("Downloading base M2M100 model", step=1, total=1)
+    print_progress("Downloading base NLLB-200 model", step=1, total=1)
     
-    success = download_m2m100_model(
-        'facebook/m2m100_418M',
-        'models/m2m100',
-        'Base M2M100 model (100 languages)'
+    success = download_nllb_model(
+        'facebook/nllb-200-distilled-600M',
+        'models/nllb200',
+        'Base NLLB-200 model (200+ languages)'
     )
     
     if success:
-        print("\n✅ Base M2M100 model downloaded successfully!")
+        print("\n✅ Base NLLB-200 model downloaded successfully!")
         print("   You now have full multilingual translation support.")
+        print("   Features:")
+        print("   • 200+ languages support")
+        print("   • Better translation quality")
+        print("   • Support for rare languages")
         return True
     else:
-        print("\n❌ Failed to download base M2M100 model")
+        print("\n❌ Failed to download base NLLB-200 model")
         print("   Kabardian ↔ Russian will still work with MarianMT.")
         return False
 
@@ -274,21 +283,23 @@ def download_all_models():
     print("""
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║           FULL MODEL DOWNLOAD (v1.0.3)                    ║
+║           FULL MODEL DOWNLOAD (v2.0.0)                    ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 This will download ALL models:
-  1. MarianMT ru→kbd (kubataba/ru-kbd-opus) ~300MB
-  2. MarianMT kbd→ru (kubataba/kbd-ru-opus) ~300MB
-3. Base M2M100 (facebook/m2m100_418M) ~1.6GB"
+  1. MarianMT ru→kbd (kubataba/ru-kbd-opus) ~250MB
+  2. MarianMT kbd→ru (kubataba/kbd-ru-opus) ~250MB
+  3. Base NLLB-200 (facebook/nllb-200-distilled-600M) ~1.2GB
   
-Total size: ~2.3GB
+Total size: ~1.7GB
 Download time: 3-10 minutes
 
 This provides complete functionality:
   • Kabardian ↔ Russian (MarianMT, better quality)
-  • All other language pairs (M2M100 base)
+  • 200+ other language pairs (NLLB-200)
+  • Modern transformer architecture
+  • Better translation quality
 """)
     
     response = input("Start download? (y/n): ")
@@ -302,13 +313,17 @@ This provides complete functionality:
     # Download MarianMT models first
     print("\n📥 Phase 1: Downloading MarianMT models...")
     if not download_minimal_models():
-        print("⚠️  MarianMT download failed, continuing with M2M100...")
+        print("⚠️  MarianMT download failed, continuing with NLLB-200...")
     
-    # Download base M2M100
-    print("\n📥 Phase 2: Downloading base M2M100...")
-    if download_base_m2m100():
+    # Download base NLLB-200
+    print("\n📥 Phase 2: Downloading base NLLB-200...")
+    if download_base_nllb():
         print("\n✅ All models downloaded successfully!")
         print("   You have complete translation functionality.")
+        print("   Key features:")
+        print("   • Kabardian ↔ Russian via MarianMT")
+        print("   • 200+ other languages via NLLB-200")
+        print("   • Cascade translation when needed")
         return True
     else:
         print("\n⚠️  Some models may be missing")
@@ -318,14 +333,14 @@ This provides complete functionality:
 def main():
     """Main CLI function"""
     parser = argparse.ArgumentParser(
-        description="Download models for Kabardian Translator v1.0.3",
+        description="Download models for Kabardian Translator v2.0.0 (NLLB-200)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Download options:
   Default (no arguments): Interactive menu
   --minimal:    Only MarianMT for Kabardian ↔ Russian (~500MB)
-  --full:       All models for complete functionality (~2.3GB)
-  --base-only:  Only base M2M100 for other languages (~1.6GB)
+  --full:       All models for complete functionality (~1.7GB)
+  --base-only:  Only base NLLB-200 for other languages (~1.2GB)
   --check:      Check installed models
 
 Examples:
@@ -339,9 +354,9 @@ Examples:
     parser.add_argument("--minimal", action="store_true",
                        help="Download only MarianMT models (~500MB)")
     parser.add_argument("--full", action="store_true",
-                       help="Download all models (~2.3GB)")
+                       help="Download all models (~1.7GB)")
     parser.add_argument("--base-only", action="store_true",
-                       help="Download only base M2M100 (~1.6GB)")
+                       help="Download only base NLLB-200 (~1.2GB)")
     parser.add_argument("--check", action="store_true",
                        help="Check installed models")
     
@@ -356,7 +371,7 @@ Examples:
     elif args.full:
         return download_all_models()
     elif args.base_only:
-        return download_base_m2m100()
+        return download_base_nllb()
     else:
         # Interactive mode
         return interactive_menu()
@@ -367,7 +382,8 @@ def interactive_menu():
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║           KABARDIAN TRANSLATOR MODEL DOWNLOADER           ║
-║                     Version 1.0.3                         ║
+║                     Version 2.0.0                         ║
+║                   (NLLB-200 Edition)                      ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
@@ -379,12 +395,12 @@ Select download option:
      • Best for most users
 
   2. Full Installation
-     • All models (~2.3GB)
-     • MarianMT + Base M2M100
-     • Complete multilingual support
+     • All models (~1.7GB)
+     • MarianMT + Base NLLB-200
+     • Complete multilingual support (200+ languages)
 
-  3. Base M2M100 only
-     • Base model only (~1.6GB)
+  3. Base NLLB-200 only
+     • Base model only (~1.2GB)
      • For other language pairs
      • Requires MarianMT for Kabardian
 
@@ -402,7 +418,7 @@ Select download option:
         elif choice == '2':
             return download_all_models()
         elif choice == '3':
-            return download_base_m2m100()
+            return download_base_nllb()
         elif choice == '4':
             return verify_installation()
         elif choice == '5':
