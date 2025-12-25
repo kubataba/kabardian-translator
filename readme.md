@@ -226,6 +226,44 @@ kabardian-download-models --base-only
 
 ---  
 
+## Upgrading from 1.x
+
+### For existing users:
+
+```bash
+# Upgrade to latest version
+pip install --upgrade kabardian-translator
+
+# Clear old model cache (important!)
+rm -rf ~/.cache/huggingface  # macOS/Linux
+# or on Windows:
+# rmdir /s %USERPROFILE%\.cache\huggingface
+
+# Download new models
+kabardian-download-models
+```
+
+### Key changes in 2.0.0:
+- **New translation model**: NLLB-200 replaces M2M100
+- **Enhanced TTS**: Full accentuation system
+- **Model cache must be cleared**: Old models incompatible
+- **200+ languages**: Expanded language support
+
+### Check version after upgrade:
+```bash
+kabardian-translator --version
+# Should show: kabardian-translator 2.0.0
+```
+
+### If issues persist:  
+
+```bash
+# Complete clean reinstall
+pip uninstall kabardian-translator
+pip install kabardian-translator
+kabardian-download-models --force
+```  
+
 ## CLI Usage
 
 ```bash
