@@ -8,43 +8,14 @@ version = "2.0.0"
 description = "Multilingual translator for Kabardian and Caucasian languages with neural translation and speech synthesis"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "CC-BY-NC-4.0"}
-keywords = [
-    "translation", 
-    "kabardian", 
-    "caucasian-languages", 
-    "tts", 
-    "nmt", 
-    "low-resource", 
-    "nllb-200",
-    "marian-mt",
-    "speech-synthesis",
-    "educational"
-]
+license = "CC-BY-NC-4.0"
+license-files = ["LICENSE"]
 authors = [
     {name = "Kubataba", email = "info@copperline.info"}
 ]
 maintainers = [
     {name = "Kubataba", email = "info@copperline.info"}
 ]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Education",
-    "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Education",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Natural Language :: English",
-    "Natural Language :: Russian",
-    "Topic :: Text Processing :: Linguistic",
-    "Topic :: Multimedia :: Sound/Audio :: Speech",
-]
-
 dependencies = [
     "flask>=3.0.0",
     "torch>=2.1.0",
@@ -58,12 +29,11 @@ dependencies = [
     "torchaudio>=2.1.0",
     "omegaconf>=2.3.0",
     "silero-stress>=1.0.0",
+    "regex>=2023.10.3",
 ]
 
 [project.optional-dependencies]
-audio = [
-    "librosa>=0.10.0"
-]
+audio = ["librosa>=0.10.0"]
 dev = [
     "pytest>=7.0.0",
     "black>=23.0.0",
@@ -71,18 +41,10 @@ dev = [
     "mypy>=1.0.0",
     "build>=0.10.0",
     "twine>=4.0.0",
+    "pytest-cov>=4.1.0",
 ]
-all = [
-    "librosa>=0.10.0",
-]
-
-[project.urls]
-Homepage = "https://github.com/kubataba/kabardian-translator"
-Documentation = "https://github.com/kubataba/kabardian-translator#readme"
-Repository = "https://github.com/kubataba/kabardian-translator"
-Issues = "https://github.com/kubataba/kabardian-translator/issues"
-"Model Hub" = "https://huggingface.co/kubataba"
-"Training Data" = "https://huggingface.co/datasets/adiga-ai/circassian-parallel-corpus"
+gui = ["gradio>=4.0.0", "ipywidgets>=8.0.0"]
+full = ["librosa>=0.10.0", "gradio>=4.0.0"]
 
 [project.scripts]
 kabardian-translator = "kabardian_translator.cli:main"
@@ -96,22 +58,4 @@ packages = ["kabardian_translator"]
 kabardian_translator = [
     "templates/*.html",
     "static/**/*",
-    "*.py",
 ]
-
-[tool.black]
-line-length = 100
-target-version = ['py311', 'py312']
-include = '\.pyi?$'
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
