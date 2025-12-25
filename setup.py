@@ -148,5 +148,4 @@ setup(
     license_files=('LICENSE',),
     platforms=["macOS", "Linux", "Windows"],
     provides=["kabardian_translator"],
-    obsoletes=["kabardian-translator<2.0.0"],
 )
