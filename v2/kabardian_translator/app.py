@@ -196,4 +196,8 @@ def api_audio(aid):
 
 
 def run(host="127.0.0.1", port=5500):
+    # native libraries are loaded on the main thread, before requests come on worker threads
+    import numpy  # noqa: F401
+    import onnxruntime  # noqa: F401
+    import soundfile  # noqa: F401
     app.run(host=host, port=port, debug=False, threaded=True)

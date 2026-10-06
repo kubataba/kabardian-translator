@@ -4,6 +4,11 @@ Two system interfaces, both used: SAPI 5 (the desktop voices, `comtypes`) and On
 `winrt`), which also sees the voices of installed language packs that SAPI often does not. The list is their union,
 OneCore first, a voice present in both listed once. More voices: Settings → Time & language → Speech → Add voices.
 Synthesis returns 16-bit PCM; nothing is written to disk except SAPI's temporary WAV, removed at once.
+
+Every call into SAPI and OneCore runs on ONE dedicated thread with COM initialized. The web server answers each
+request on a new thread, and COM there is not initialized (comtypes does it only in the thread that imports it): a
+voice list asked for from such a thread is an access violation that kills the process without a Python error
+(found 06.10 on Windows, Python 3.14).
 """
 from __future__ import annotations
 
@@ -12,12 +17,31 @@ import locale
 import os
 import tempfile
 import threading
-from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
 SAMPLE_RATE = 22050          # SAPI is asked for 22 kHz 16-bit mono; OneCore's own rate is read from its WAV
 _lock = threading.Lock()
+_executor = None
+_voices = None
+
+
+def _com_init():
+    try:
+        import comtypes
+        comtypes.CoInitialize()                 # single-threaded apartment, as SAPI expects
+    except Exception:
+        pass
+
+
+def _on_com_thread(fn, *args):
+    """Runs fn on the voice thread and returns its result (exceptions are raised here)."""
+    global _executor
+    with _lock:
+        if _executor is None:
+            _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="windows-voices", initializer=_com_init)
+    return _executor.submit(fn, *args).result()
 
 
 def _lang_of(tag: str) -> str:
@@ -108,8 +132,7 @@ def _sapi_wav(text: str, token_id: str, speed: float) -> bytes:
 
 
 # ---------------------------------------------------------------------------------------------- the list
-@lru_cache(maxsize=1)
-def voices() -> list:
+def _list() -> list:
     out, seen = [], set()
     for v in _onecore_voices() + _sapi_voices():
         key = (v["name"].replace("Microsoft ", "").split(" - ")[0], v["lang"])
@@ -117,6 +140,13 @@ def voices() -> list:
             seen.add(key)
             out.append(v)
     return out
+
+
+def voices() -> list:
+    global _voices
+    if _voices is None:
+        _voices = _on_com_thread(_list)
+    return _voices
 
 
 def for_language(lang: str) -> list:
@@ -135,9 +165,8 @@ def synthesize(text: str, lang: str, voice: str | None = None, speed: float = 1.
         if not options:
             raise RuntimeError(f"no Windows voice installed for {lang!r}")
         voice = options[0]["id"]
-    with _lock:
-        wav = _onecore_wav(text, voice[len("onecore:"):], speed) if voice.startswith("onecore:") \
-            else _sapi_wav(text, voice[len("sapi:"):], speed)
+    wav = _on_com_thread(_onecore_wav, text, voice[len("onecore:"):], speed) if voice.startswith("onecore:") \
+        else _on_com_thread(_sapi_wav, text, voice[len("sapi:"):], speed)
     y, rate = sf.read(io.BytesIO(wav), dtype="float32", always_2d=False)
     if y.ndim > 1:
         y = y.mean(axis=1)

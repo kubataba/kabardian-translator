@@ -11,6 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.14"]
     runs-on: ${{ matrix.os }}
     env:
       PYTHONIOENCODING: utf-8
@@ -19,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
       - name: Build and install the wheel
         shell: bash
         run: |
@@ -30,3 +31,5 @@ jobs:
         run: kabardian-download-models all
       - name: Smoke test
         run: python v2/tests/smoke.py
+      - name: The web server, as a browser uses it
+        run: python v2/tests/server_check.py
