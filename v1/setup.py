@@ -111,6 +111,7 @@ setup(
         ('share/kabardian-translator', [
             'README.md',
             'LICENSE',
+            'models/README.txt',
         ]),
     ],
     extras_require={
