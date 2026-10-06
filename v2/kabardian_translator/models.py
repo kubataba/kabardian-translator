@@ -59,8 +59,8 @@ PACKAGES = {
         licence="SIA Copper Line, see the release LICENCE; source model kubataba/ru-kbd-bidirectional (CC BY-NC 4.0)"),
     "madlad": Package(
         key="madlad", title="MADLAD-400 3B on the Neural Engine (every other language)", tag="translate-madlad-v1",
-        size_mb=1333,
-        assets=(Asset("madlad-sayfable-v1.zip", "257b5b5105f3e2244e4afe3b596f47d8d833b3bc3a50cde1f93f6de155824639",
+        size_mb=1335,
+        assets=(Asset("madlad-sayfable-v1.zip", "7f48279ec6bf9694ac0342bb5d43ca62b0b290cef08eb35be1554ac03c1a2b80",
                       "translate-madlad/madlad-sayfable-v1.zip", unzip=True),),
         required=("spiece.model", "embed_int8.bin", "embed_scale_fp16.bin", ("decoder_24_32.mlpackage",
                                                                              "compiled/decoder_24_32.mlmodelc")),
