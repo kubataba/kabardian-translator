@@ -45,6 +45,8 @@ textarea,.out{flex:1;width:100%;border:0;resize:vertical;background:transparent;
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
 .btn:disabled{opacity:.45;cursor:default}
 .menuwrap{position:relative}
+#engine .seg button{font-size:13px;padding:4px 10px}#engine .seg button:disabled{opacity:.5;cursor:default}
+#engine .fixed{font-size:13px;color:var(--muted)}
 .menu{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:20;min-width:300px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 8px 28px rgba(0,0,0,.18)}
 .menu.on{display:block}
 .mrow{display:flex;align-items:center;gap:6px;padding:6px 6px;font-size:14px}
@@ -68,9 +70,9 @@ tr.grp td{background:var(--soft);font-weight:700}
 .models .card{padding:16px}
 .models h3{margin:0 0 4px;font-size:16px}
 .log{font:12px ui-monospace,Menlo,monospace;color:var(--muted);max-height:90px;overflow:auto;margin-top:8px;white-space:pre-wrap}
-.about{padding:20px 24px;max-width:860px}.about h2{margin-top:0}
+.about{padding:20px 24px;max-width:860px}.about h2{margin-top:0}.about h3{margin:22px 0 6px;font-size:16px}
 @media (max-width:820px){.panes{grid-template-columns:1fr}.pane+.pane{border-left:0;border-top:1px solid var(--line)}
-  .bar select{min-width:0;flex:1 1 38%}.bar .grow{display:none}#route{flex-basis:100%}main{padding:12px}header{padding:10px 12px}}
+  .bar select{min-width:0;flex:1 1 38%}.bar .grow{display:none}#route{flex-basis:100%}#engine{flex-basis:100%}main{padding:12px}header{padding:10px 12px}}
 </style>
 </head>
 <body>
@@ -95,6 +97,7 @@ tr.grp td{background:var(--soft);font-weight:700}
       <select id="tgt"></select>
       <span class="grow"></span>
       <span class="small muted" id="route"></span>
+      <span id="engine"></span>
     </div>
     <div class="progress"><i id="prog"></i></div>
     <div class="panes">
@@ -167,73 +170,88 @@ tr.grp td{background:var(--soft);font-weight:700}
 <script>
 const T = {
  ru:{tab_translate:"Перевод",tab_languages:"Языки",tab_models:"Модели",tab_about:"О проекте",translate:"Перевести",
-  listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",theme_light:"Светлая тема",theme_dark:"Тёмная тема",save:"Сохранить…",save_trans:"Только перевод",save_both:"Оригинал и перевод по предложениям",fast:"быстрый кабардинский (жадный поиск)",
+  listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",theme_light:"Светлая тема",engine_title:"Переводчик для остальных языков",
+  to_small:"Перейти на SMaLL-100? Он скачается (289 МБ), а MADLAD-400 будет удалён с диска (1.3 ГБ). SMaLL-100 в 10 раз быстрее и легче, но переводит хуже (в среднем на 7–8 chrF) и знает 30 языков вместо 37: нет киргизского, татарского, таджикского, башкирского, узбекского, каталанского, норвежского. Вернуться можно в любой момент — MADLAD скачается заново.",
+  to_madlad:"Вернуться на MADLAD-400? Он скачается (1.3 ГБ, первый запуск — около 2 минут на подготовку модели), а SMaLL-100 будет удалён с диска.",
+  switching:"переключение переводчика: {x}",switched:"переводчик: {x}",busy:"Дождитесь окончания перевода.",theme_dark:"Тёмная тема",save:"Сохранить…",save_trans:"Только перевод",save_both:"Оригинал и перевод по предложениям",fast:"быстрый кабардинский (жадный поиск)",
   speed:"темп",doc_title:"Документ",doc_hint:".txt, .md или .docx любого размера: перевод идёт по абзацам, результат можно скачать.",
   doc_pick:"Выбрать файл…",placeholder:"Введите или вставьте текст любой длины — или перетащите сюда файл .txt, .md, .docx…",result:"Здесь появится перевод",
   chars:"знаков",progress:"абзац {d} из {t}",done:"готово за {s} с",working:"переводится…",loading:"первый запуск: модель загружается (до 1–2 минут)…",
   copied:"скопировано",nomodel:"Модель не установлена — откройте вкладку «Модели».",
-  route_kbd:"наша модель ru↔kbd",route_madlad:"MADLAD-400",route_via:"через {x}",
+  route_kbd:"наша модель ru↔kbd",route_via:"через {x}",
   lang_intro:"Качество — chrF на FLORES-200 (чем выше, тем лучше; 50+ хорошо, 35–50 понятно, ниже 35 — слабо). Кабардинский с любым языком, кроме русского, переводится через русский.",
   col_lang:"Язык",col_script:"Письмо",col_route:"Как переводится",col_quality:"Качество (chrF)",col_voice:"Голос",
-  r_kbd:"своя модель ru↔kbd",r_direct:"напрямую",r_via_ru:"через русский",
-  v_silero:"Silero",v_baltic:"наша балтийская модель",v_apple:"голос Apple",v_none:"—",
+  r_kbd:"своя модель ru↔kbd",r_direct:"напрямую",r_via_ru:"через русский",r_via_en:"через английский",
+  v_silero:"Silero",v_baltic:"наша балтийская модель",v_apple:"голос Apple",v_windows:"голос Windows",v_none:"—",
   from_en:"из англ.",from_ru:"из рус.",scripts:{Cyrillic:"кириллица",Latin:"латиница",Greek:"греческое",Armenian:"армянское",Georgian:"грузинское"},
-  models_intro:"Все модели работают на этом Mac, без интернета. Скачиваются один раз из релизов kubataba/sayfable-models с проверкой контрольной суммы.",
+  models_intro:"Все модели работают на этом компьютере, без интернета. Скачиваются один раз из релизов kubataba/sayfable-models с проверкой контрольной суммы.",
   install:"Установить",installed:"установлена",notinstalled:"не установлена",installing:"устанавливается…",
   about:`<h2>Kabardian Translator 3</h2>
-  <p>Локальный переводчик и синтез речи для кабардинского и ещё 36 языков. Всё работает на вашем Mac — текст никуда не отправляется.</p>
+  <p>Локальный переводчик и синтез речи для кабардинского и ещё 30–37 языков. Всё работает на вашем компьютере — текст никуда не отправляется.</p>
   <ul><li><b>Русский ↔ кабардинский</b> — наша модель (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2. С правилами приложения SayFable: кавычки, сторож газетных названий и петель, замена калек.</li>
-  <li><b>Остальные языки</b> — MADLAD-400 3B (Google, Apache-2.0) в нашей сборке для Neural Engine Apple.</li>
-  <li><b>Голос</b> — Silero v5 (кабардинский, русский, языки СНГ), наша балтийская модель (латышский, литовский, эстонский) и голоса Apple, установленные на Mac.</li></ul>
-  <p>Требуется macOS на Apple Silicon. Для Windows и Linux остаётся версия 1 (каталог <code>v1/</code>).</p>
+  <li><b>Остальные языки</b> — на Mac с Apple Silicon MADLAD-400 3B (Google, Apache-2.0) в нашей сборке для Neural Engine, 37 языков; на Windows и Linux — SMaLL-100 (MIT), 30 языков.</li>
+  <li><b>Голос</b> — Silero v5 (кабардинский, русский, языки СНГ), наша балтийская модель (латышский, литовский, эстонский) и голоса системы: Apple на Mac, Windows на Windows.</li></ul>
+  <h3>Две модели перевода на Mac</h3>
+  <p>На Mac с Apple Silicon остальные языки переводит MADLAD-400, но его можно сменить на SMaLL-100 переключателем возле выбора языков. SMaLL-100 примерно в 10 раз быстрее и занимает 289 МБ вместо 1.3 ГБ — удобен, когда нужен подстрочник или мало места на диске. Зато переводит в среднем хуже (47.9 против 55.5 chrF на FLORES-200) и знает 30 языков вместо 37. Хуже не везде: грузинский SMaLL-100 переводит лучше во всех направлениях (с грузинского на русский — 37.9 против 24.3), армянский на русский — тоже. На диске остаётся только выбранная модель; вернуться можно в любой момент. Кабардинский от выбора не зависит — у него своя модель. На Windows и Linux всегда работает SMaLL-100.</p>
+  <p>Работает на macOS, Windows и Linux. Первая версия — в каталоге <code>v1/</code> репозитория.</p>
   <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Некоммерческое использование — CC BY-NC 4.0; модели — под своими лицензиями (вкладка «Модели»).</p>`},
  en:{tab_translate:"Translate",tab_languages:"Languages",tab_models:"Models",tab_about:"About",translate:"Translate",
-  listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",theme_light:"Light theme",theme_dark:"Dark theme",save:"Save…",save_trans:"Translation only",save_both:"Original and translation, sentence by sentence",fast:"fast Kabardian (greedy search)",
+  listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",theme_light:"Light theme",engine_title:"Translator for the other languages",
+  to_small:"Switch to SMaLL-100? It will be downloaded (289 MB) and MADLAD-400 removed from disk (1.3 GB). SMaLL-100 is ten times faster and lighter, but translates worse (7–8 chrF on average) and knows 30 languages instead of 37: no Kyrgyz, Tatar, Tajik, Bashkir, Uzbek, Catalan, Norwegian. You can switch back at any time — MADLAD will be downloaded again.",
+  to_madlad:"Switch back to MADLAD-400? It will be downloaded (1.3 GB; the first start prepares the model for about 2 minutes) and SMaLL-100 removed from disk.",
+  switching:"switching the translator: {x}",switched:"translator: {x}",busy:"Wait for the translation to finish.",theme_dark:"Dark theme",save:"Save…",save_trans:"Translation only",save_both:"Original and translation, sentence by sentence",fast:"fast Kabardian (greedy search)",
   speed:"pace",doc_title:"Document",doc_hint:".txt, .md or .docx of any size: translated paragraph by paragraph, ready to download.",
   doc_pick:"Choose a file…",placeholder:"Type or paste text of any length — or drop a .txt, .md or .docx file here…",result:"The translation appears here",
   chars:"characters",progress:"paragraph {d} of {t}",done:"done in {s} s",working:"translating…",loading:"first run: loading the model (up to 1–2 minutes)…",
   copied:"copied",nomodel:"The model is not installed — open the Models tab.",
-  route_kbd:"our ru↔kbd model",route_madlad:"MADLAD-400",route_via:"via {x}",
+  route_kbd:"our ru↔kbd model",route_via:"via {x}",
   lang_intro:"Quality is chrF on FLORES-200 (higher is better: 50+ good, 35–50 understandable, below 35 weak). Kabardian with any language other than Russian goes through Russian.",
   col_lang:"Language",col_script:"Script",col_route:"How it is translated",col_quality:"Quality (chrF)",col_voice:"Voice",
-  r_kbd:"own ru↔kbd model",r_direct:"directly",r_via_ru:"via Russian",
-  v_silero:"Silero",v_baltic:"our Baltic model",v_apple:"Apple voice",v_none:"—",
+  r_kbd:"own ru↔kbd model",r_direct:"directly",r_via_ru:"via Russian",r_via_en:"via English",
+  v_silero:"Silero",v_baltic:"our Baltic model",v_apple:"Apple voice",v_windows:"Windows voice",v_none:"—",
   from_en:"from en",from_ru:"from ru",scripts:{Cyrillic:"Cyrillic",Latin:"Latin",Greek:"Greek",Armenian:"Armenian",Georgian:"Georgian"},
-  models_intro:"Every model runs on this Mac, offline. Each is downloaded once from the kubataba/sayfable-models releases and verified by checksum.",
+  models_intro:"Every model runs on this computer, offline. Each is downloaded once from the kubataba/sayfable-models releases and verified by checksum.",
   install:"Install",installed:"installed",notinstalled:"not installed",installing:"installing…",
   about:`<h2>Kabardian Translator 3</h2>
-  <p>Local translation and speech for Kabardian and 36 more languages. Everything runs on your Mac — no text leaves it.</p>
+  <p>Local translation and speech for Kabardian and 30–37 more languages. Everything runs on your computer — no text leaves it.</p>
   <ul><li><b>Russian ↔ Kabardian</b> — our model (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, with the SayFable app's rules: quotes, a guard against press names and loops, calque replacement.</li>
-  <li><b>Every other language</b> — MADLAD-400 3B (Google, Apache-2.0) in our build for the Apple Neural Engine.</li>
-  <li><b>Speech</b> — Silero v5 (Kabardian, Russian, CIS languages), our Baltic model (Latvian, Lithuanian, Estonian) and the Apple voices installed on the Mac.</li></ul>
-  <p>Requires macOS on Apple Silicon. Windows and Linux stay on version 1 (folder <code>v1/</code>).</p>
+  <li><b>Every other language</b> — on Macs with Apple Silicon MADLAD-400 3B (Google, Apache-2.0) in our build for the Neural Engine, 37 languages; on Windows and Linux SMaLL-100 (MIT), 30 languages.</li>
+  <li><b>Speech</b> — Silero v5 (Kabardian, Russian, CIS languages), our Baltic model (Latvian, Lithuanian, Estonian) and the system's voices: Apple on a Mac, Windows on Windows.</li></ul>
+  <h3>Two translation models on a Mac</h3>
+  <p>On a Mac with Apple Silicon the other languages are translated by MADLAD-400, and the switch next to the language selectors changes it to SMaLL-100. SMaLL-100 is about ten times faster and takes 289 MB instead of 1.3 GB — handy for a rough translation or a small disk. It translates worse on average (47.9 against 55.5 chrF on FLORES-200) and knows 30 languages instead of 37. Not everywhere, though: SMaLL-100 is better for Georgian in every direction (Georgian to Russian 37.9 against 24.3) and for Armenian to Russian. Only the chosen model stays on disk; you can switch back at any time. Kabardian does not depend on the choice — it has its own model. On Windows and Linux SMaLL-100 is always used.</p>
+  <p>Runs on macOS, Windows and Linux. Version 1 is in the repository folder <code>v1/</code>.</p>
   <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Non-commercial use — CC BY-NC 4.0; models under their own licences (Models tab).</p>`},
  lv:{tab_translate:"Tulkošana",tab_languages:"Valodas",tab_models:"Modeļi",tab_about:"Par projektu",translate:"Tulkot",
-  listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",theme_light:"Gaišā tēma",theme_dark:"Tumšā tēma",save:"Saglabāt…",save_trans:"Tikai tulkojums",save_both:"Oriģināls un tulkojums pa teikumiem",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
+  listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",theme_light:"Gaišā tēma",engine_title:"Tulkotājs pārējām valodām",
+  to_small:"Pāriet uz SMaLL-100? Tas tiks lejupielādēts (289 MB), un MADLAD-400 tiks izdzēsts no diska (1,3 GB). SMaLL-100 ir desmit reizes ātrāks un vieglāks, bet tulko sliktāk (vidēji par 7–8 chrF) un zina 30 valodas 37 vietā: nav kirgīzu, tatāru, tadžiku, baškīru, uzbeku, katalāņu, norvēģu. Atgriezties var jebkurā brīdī — MADLAD tiks lejupielādēts no jauna.",
+  to_madlad:"Atgriezties pie MADLAD-400? Tas tiks lejupielādēts (1,3 GB; pirmā palaišana sagatavo modeli apmēram 2 minūtes), un SMaLL-100 tiks izdzēsts no diska.",
+  switching:"tulkotāja pārslēgšana: {x}",switched:"tulkotājs: {x}",busy:"Pagaidiet, līdz tulkošana beidzas.",theme_dark:"Tumšā tēma",save:"Saglabāt…",save_trans:"Tikai tulkojums",save_both:"Oriģināls un tulkojums pa teikumiem",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
   speed:"temps",doc_title:"Dokuments",doc_hint:".txt, .md vai .docx jebkurā apjomā: tulko pa rindkopām, rezultātu var lejupielādēt.",
   doc_pick:"Izvēlēties failu…",placeholder:"Ievadiet vai ielīmējiet jebkura garuma tekstu — vai ievelciet šeit .txt, .md, .docx failu…",result:"Šeit parādīsies tulkojums",
   chars:"zīmes",progress:"rindkopa {d} no {t}",done:"gatavs {s} s",working:"tulko…",loading:"pirmā palaišana: ielādē modeli (līdz 1–2 minūtēm)…",
   copied:"nokopēts",nomodel:"Modelis nav instalēts — atveriet cilni «Modeļi».",
-  route_kbd:"mūsu ru↔kbd modelis",route_madlad:"MADLAD-400",route_via:"caur {x}",
+  route_kbd:"mūsu ru↔kbd modelis",route_via:"caur {x}",
   lang_intro:"Kvalitāte ir chrF uz FLORES-200 (jo augstāk, jo labāk: 50+ labi, 35–50 saprotami, zem 35 vāji). Kabardiešu valodu ar jebkuru citu, izņemot krievu, tulko caur krievu valodu.",
   col_lang:"Valoda",col_script:"Raksts",col_route:"Kā tulko",col_quality:"Kvalitāte (chrF)",col_voice:"Balss",
-  r_kbd:"savs ru↔kbd modelis",r_direct:"tieši",r_via_ru:"caur krievu",
-  v_silero:"Silero",v_baltic:"mūsu baltu modelis",v_apple:"Apple balss",v_none:"—",
+  r_kbd:"savs ru↔kbd modelis",r_direct:"tieši",r_via_ru:"caur krievu",r_via_en:"caur angļu",
+  v_silero:"Silero",v_baltic:"mūsu baltu modelis",v_apple:"Apple balss",v_windows:"Windows balss",v_none:"—",
   from_en:"no angļu",from_ru:"no krievu",scripts:{Cyrillic:"kirilica",Latin:"latīņu",Greek:"grieķu",Armenian:"armēņu",Georgian:"gruzīnu"},
-  models_intro:"Visi modeļi darbojas šajā Mac datorā, bez interneta. Tos lejupielādē vienreiz no kubataba/sayfable-models laidieniem un pārbauda ar kontrolsummu.",
+  models_intro:"Visi modeļi darbojas šajā datorā, bez interneta. Tos lejupielādē vienreiz no kubataba/sayfable-models laidieniem un pārbauda ar kontrolsummu.",
   install:"Instalēt",installed:"instalēts",notinstalled:"nav instalēts",installing:"instalē…",
   about:`<h2>Kabardian Translator 3</h2>
-  <p>Lokāla tulkošana un runas sintēze kabardiešu un vēl 36 valodām. Viss darbojas jūsu Mac datorā — teksts netiek nekur sūtīts.</p>
+  <p>Lokāla tulkošana un runas sintēze kabardiešu un vēl 30–37 valodām. Viss darbojas jūsu datorā — teksts netiek nekur sūtīts.</p>
   <ul><li><b>Krievu ↔ kabardiešu</b> — mūsu modelis (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, ar lietotnes SayFable noteikumiem: pēdiņas, sargs pret avīžu nosaukumiem un cilpām, kalku aizstāšana.</li>
-  <li><b>Pārējās valodas</b> — MADLAD-400 3B (Google, Apache-2.0) mūsu versijā Apple Neural Engine.</li>
-  <li><b>Balss</b> — Silero v5 (kabardiešu, krievu, NVS valodas), mūsu baltu modelis (latviešu, lietuviešu, igauņu) un Mac datorā instalētās Apple balsis.</li></ul>
-  <p>Nepieciešama macOS uz Apple Silicon. Windows un Linux paliek 1. versija (mape <code>v1/</code>).</p>
+  <li><b>Pārējās valodas</b> — Mac datoros ar Apple Silicon MADLAD-400 3B (Google, Apache-2.0) mūsu versijā Neural Engine, 37 valodas; Windows un Linux — SMaLL-100 (MIT), 30 valodas.</li>
+  <li><b>Balss</b> — Silero v5 (kabardiešu, krievu, NVS valodas), mūsu baltu modelis (latviešu, lietuviešu, igauņu) un sistēmas balsis: Apple Mac datorā, Windows sistēmā Windows.</li></ul>
+  <h3>Divi tulkošanas modeļi Mac datorā</h3>
+  <p>Mac datorā ar Apple Silicon pārējās valodas tulko MADLAD-400, bet ar slēdzi pie valodu izvēles to var nomainīt uz SMaLL-100. SMaLL-100 ir apmēram desmit reizes ātrāks un aizņem 289 MB, nevis 1,3 GB — ērti, ja vajag aptuvenu tulkojumu vai diskā maz vietas. Toties tas vidēji tulko sliktāk (47,9 pret 55,5 chrF FLORES-200) un zina 30 valodas 37 vietā. Ne visur: gruzīnu valodu SMaLL-100 tulko labāk visos virzienos (no gruzīnu uz krievu 37,9 pret 24,3), arī no armēņu uz krievu. Diskā paliek tikai izvēlētais modelis; atgriezties var jebkurā brīdī. Kabardiešu valoda no izvēles nav atkarīga — tai ir savs modelis. Windows un Linux vienmēr izmanto SMaLL-100.</p>
+  <p>Darbojas macOS, Windows un Linux. 1. versija ir repozitorija mapē <code>v1/</code>.</p>
   <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Nekomerciāla izmantošana — CC BY-NC 4.0; modeļiem savas licences (cilne «Modeļi»).</p>`}
 };
 const $ = s => document.querySelector(s);
 const store = {get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let ui = store.get("ui", (navigator.language||"en").slice(0,2)); if(!T[ui]) ui = "en";
-let LANGS = [], GROUPS = {}, job = null, lastResult = "", lastOriginal = "", timer = null;
+let ENGINE = "MADLAD-400", ENGINE_KEY = "madlad", CAN_CHOOSE = false, SWITCHING = false, LANGS = [], GROUPS = {}, job = null, lastResult = "", lastOriginal = "", timer = null;
 const t = (k, v={}) => (T[ui][k]||T.en[k]||k).replace(/\{(\w)\}/g, (_,x)=>v[x]??"");
 
 function applyUI(){
@@ -265,11 +283,15 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 
 async function loadLanguages(){
   const r = await fetch(`/api/languages?ui=${ui}`).then(r => r.json());
-  LANGS = r.languages; GROUPS = r.groups;
-  const keepS = $("#src").value || store.get("src","ru"), keepT = $("#tgt").value || store.get("tgt","kbd");
+  LANGS = r.languages; GROUPS = r.groups; ENGINE = r.engine || "MADLAD-400"; ENGINE_KEY = r.engine_key; CAN_CHOOSE = r.can_choose;
+  const has = c => LANGS.some(l => l.code === c);
+  let keepS = $("#src").value || store.get("src","ru"), keepT = $("#tgt").value || store.get("tgt","kbd");
+  if (!has(keepS)) keepS = keepT === "ru" ? "kbd" : "ru";
+  if (!has(keepT)) keepT = keepS === "kbd" ? "ru" : "kbd";
   for (const sel of [$("#src"), $("#tgt")]) {
     sel.innerHTML = "";
     for (const g of Object.keys(GROUPS)) {
+      if (!LANGS.some(l => l.group === g)) continue;
       const og = document.createElement("optgroup"); og.label = GROUPS[g];
       LANGS.filter(l => l.group === g).sort((a,b) => g === "core" ? 0 : a.name.localeCompare(b.name, ui))
         .forEach(l => og.append(new Option(l.name, l.code)));
@@ -277,12 +299,13 @@ async function loadLanguages(){
     }
   }
   $("#src").value = keepS; $("#tgt").value = keepT;
-  renderTable(); showRoute(); loadVoices();
+  renderTable(); showRoute(); loadVoices(); renderEngine();
 }
 function q(v){ if(v==null) return '<span class="muted">—</span>'; const c = v>=50?"hi":v>=35?"mid":"lo"; return `<span class="q ${c}">${v.toFixed(1)}</span>`; }
 function renderTable(){
   const tb = $("#langtable tbody"); tb.innerHTML = "";
   for (const g of Object.keys(GROUPS)) {
+    if (!LANGS.some(l => l.group === g)) continue;
     tb.insertAdjacentHTML("beforeend", `<tr class="grp"><td colspan="5">${GROUPS[g]}</td></tr>`);
     LANGS.filter(l => l.group === g).forEach(l => {
       let qual;
@@ -290,7 +313,7 @@ function renderTable(){
       else if (l.code === "ru") qual = `${t("from_en")} ${q(l.quality[0])}`;
       else if (l.quality) qual = [l.quality[0]!=null ? `${t("from_en")} ${q(l.quality[0])}` : "", l.quality[1]!=null ? `${t("from_ru")} ${q(l.quality[1])}` : ""].filter(Boolean).join(" · ");
       else qual = "—";
-      const route = l.code==="kbd" ? t("r_kbd") : l.route==="via_ru" ? t("r_via_ru") : t("r_direct");
+      const route = l.code==="kbd" ? t("r_kbd") : l.route==="via_ru" ? t("r_via_ru") : l.route==="via_en" ? t("r_via_en") : t("r_direct");
       const v = l.voices && l.voices[0] ? t("v_"+l.voices[0]) : t("v_none");
       tb.insertAdjacentHTML("beforeend", `<tr><td><b>${l.name}</b> <span class="muted small">${l.code}</span></td>
         <td>${(T[ui].scripts||T.en.scripts)[l.script]||l.script}</td><td><span class="pill">${route}</span></td><td>${qual}</td><td>${v}</td></tr>`);
@@ -302,9 +325,40 @@ function showRoute(){
   const s = $("#src").value, g = $("#tgt").value; store.set("src", s); store.set("tgt", g);
   let r;
   if ((s==="ru"&&g==="kbd")||(s==="kbd"&&g==="ru")) r = t("route_kbd");
-  else if (s==="kbd"||g==="kbd") r = `${t("route_kbd")} + ${t("route_madlad")}, ${t("r_via_ru")}`;
-  else r = t("route_madlad");
+  else if (s==="kbd"||g==="kbd") r = `${t("route_kbd")} + ${t("r_via_ru")}:`;
+  else r = "";
   $("#route").textContent = r;
+}
+// the translator for the pairs without Kabardian: a switch on a Mac with Apple Silicon, a plain name elsewhere
+function renderEngine(){
+  const box = $("#engine");
+  if (!CAN_CHOOSE) { box.innerHTML = `<span class="fixed" title="${t("engine_title")}">${ENGINE}</span>`; return; }
+  box.innerHTML = `<span class="seg" title="${t("engine_title")}"><button data-e="madlad">MADLAD-400</button><button data-e="small100">SMaLL-100</button></span>`;
+  box.querySelectorAll("button").forEach(b => {
+    b.classList.toggle("on", b.dataset.e === ENGINE_KEY);
+    b.disabled = SWITCHING;
+    b.onclick = () => switchEngine(b.dataset.e);
+  });
+}
+async function switchEngine(e){
+  if (SWITCHING || e === ENGINE_KEY) return;
+  if (!confirm(t(e === "small100" ? "to_small" : "to_madlad"))) return;
+  const r = await fetch("/api/translator", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({engine: e})});
+  const j = await r.json();
+  if (r.status === 409) return note(t("busy"), true);
+  if (j.error) return note(j.error, true);
+  SWITCHING = true; renderEngine(); $("#go").disabled = true; note("");
+  const poll = setInterval(async () => {
+    const s = await fetch("/api/translator").then(r => r.json());
+    const sw = s.switch || {};
+    const last = (sw.log || []).slice(-1)[0] || "…";
+    if (sw.state === "running") { $("#status").textContent = t("switching", {x: last}); return; }
+    clearInterval(poll); SWITCHING = false; $("#go").disabled = false;
+    if (sw.state === "error") note(sw.error, true);
+    else $("#status").textContent = t("switched", {x: s.name});
+    await loadLanguages(); loadModels();       // the language list follows the new translator
+  }, 1000);
 }
 async function loadVoices(){
   const r = await fetch(`/api/voices?lang=${$("#tgt").value}`).then(r => r.json());

@@ -1,24 +1,22 @@
 """baltic-sayfable — our Piper (VITS) model for Latvian, Lithuanian and Estonian, 18 voices, on ONNX Runtime.
 
-The text layer and the phonemizers are the SayFable app's own Swift code, compiled into the small helper
-`bin/baltic-phonemes` (tools/baltic-phonemes/build.sh): the model gets exactly the input it was trained on
-(parity with the training set — 599 of 600 lines; the one difference is the app's Roman-numeral rule, «II» → «teine»).
-The helper reads lt.dict / et.dict from its own folder, so it is copied next to the model on first use.
+The text layer and the phonemizers are the SayFable app's, ported to Python (`baltic_text`): the model gets exactly
+the input it was trained on, on every system — identical to the app's own Swift code on its 600 parity lines, 3036
+FLORES sentences and the hard cases (numbers, Roman numerals, ordinals, foreign letters); 599 of 600 against the
+training set itself, the one difference being the app's Roman-numeral rule («II» → «teine»).
 """
 from __future__ import annotations
 
 import json
 import re
-import shutil
-import subprocess
 import threading
 import unicodedata
-from importlib import resources
 from pathlib import Path
 
 import numpy as np
 
 from .. import models
+from . import baltic_text
 
 SAMPLE_RATE = 22050
 MAX_IDS = 600            # VITS loses half of a longer chain (measured in the app, prompt 347)
@@ -39,26 +37,12 @@ class BalticPiper:
         o.log_severity_level = 3
         o.intra_op_num_threads = 2
         self.session = ort.InferenceSession(str(f / "baltic-sayfable.onnx"), o, providers=["CPUExecutionProvider"])
-        self.helper = self._install_helper(f)
-        self.proc = None
+        baltic_text.set_folder(f)
         self.lock = threading.Lock()
 
     @staticmethod
-    def _install_helper(folder: Path) -> Path:
-        src = Path(str(resources.files("kabardian_translator").joinpath("bin/baltic-phonemes")))
-        dst = folder / "baltic-phonemes"
-        if not dst.exists() or dst.stat().st_size != src.stat().st_size or dst.stat().st_mtime < src.stat().st_mtime:
-            shutil.copy2(src, dst)
-            dst.chmod(0o755)
-        return dst
-
-    def _phonemes(self, text: str, lang: str) -> str:
-        if self.proc is None or self.proc.poll() is not None:
-            self.proc = subprocess.Popen([str(self.helper)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                         text=True, encoding="utf-8", bufsize=1)
-        self.proc.stdin.write(f"{lang}\t{text.replace(chr(10), ' ').replace(chr(9), ' ')}\n")
-        self.proc.stdin.flush()
-        return self.proc.stdout.readline().rstrip("\n")
+    def _phonemes(text: str, lang: str) -> str:
+        return baltic_text.phonemes(text.replace("\n", " ").replace("\u2028", " "), lang)
 
     def _ids(self, phonemes: str) -> list:
         ids = [1, 0]

@@ -65,6 +65,14 @@ PACKAGES = {
         required=("spiece.model", "embed_int8.bin", "embed_scale_fp16.bin", ("decoder_24_32.mlpackage",
                                                                              "compiled/decoder_24_32.mlmodelc")),
         licence="Apache-2.0 (google/madlad400-3b-mt, modified: see ATTRIBUTION.md)"),
+    "small100": Package(
+        key="small100", title="SMaLL-100 (every other language; lighter and faster)", tag="translate-v1",
+        size_mb=289,
+        assets=(Asset("translate_small100.zip", "67835318ee6c10ad1dfb78225d49c8c0f22a360cafeca185cf2a2066b9126bcb",
+                      "translate-small100/translate_small100.zip", unzip=True),),
+        required=("encoder_model.int8.onnx", "decoder_merged.int8.int32flag.onnx", "bpe_vocab.tsv",
+                  "token_ids.json"),
+        licence="MIT (alirezamsh/small100, teacher facebook/m2m100_418M), ONNX int8 by SayFable"),
     "silero": Package(
         key="silero", title="Silero v5 speech (Russian, Kabardian and CIS languages)", tag="v5.1", size_mb=118,
         assets=(Asset("silero_v5_full.zip", "980324357a1fb4c07bb3c29f35d2879c5946a8330d05935897b849a265510c79",
@@ -85,10 +93,25 @@ PACKAGES = {
                 Asset("lt.dict", "d3ddc2b4a1fe5532047ce3ea3266075e4a92d1eaf2b9b66ec6a78e73d75917ab",
                       "piper/piper-baltic/lt.dict"),
                 Asset("et.dict", "4d94bbb6234ea669167fde6bc0b4435677b5230418a86f02f259a37d6407db07",
-                      "piper/piper-baltic/et.dict")),
-        required=("baltic-sayfable.onnx", "baltic-sayfable.onnx.json", "lt.dict", "et.dict"),
+                      "piper/piper-baltic/et.dict"),
+                # form dictionaries of the language packs (Wiktionary/Kaikki): a Roman letter in a heading
+                # («X skyrius») and the case of an Estonian ordinal are decided by them, as in the app
+                Asset("lang-lv.zip", "29960ddd2ca71936413e40be11580a635f9ea4cc0fbf9b3d588fb6079e41a9e2",
+                      "lang-lv.zip", unzip=True, tag="lang-v2", members=("lv-morph.txt",)),
+                Asset("lang-lt.zip", "90e6985f8569bf47f791dd7892d7f4dcbec87a73c596893cbbbb91fbc5af54f5",
+                      "lang-lt.zip", unzip=True, tag="lang-v7", members=("lt-morph.txt",)),
+                Asset("lang-et.zip", "a06a569943f34e3b962b07c25e5dcc2ec697306a7035fd2db1a80aa01e1653aa",
+                      "lang-et.zip", unzip=True, tag="lang-v4", members=("et-morph.txt",))),
+        required=("baltic-sayfable.onnx", "baltic-sayfable.onnx.json", "lt.dict", "et.dict", "lv-morph.txt",
+                  "lt-morph.txt", "et-morph.txt"),
         licence="SIA Copper Line, see the release LICENCE"),
 }
+
+
+def available() -> list:
+    """The packages this system uses: the chosen translator (MADLAD or SMaLL-100) and the rest."""
+    from .system import translator
+    return [k for k in PACKAGES if k not in ("madlad", "small100") or k == translator()]
 
 
 def folder(key: str) -> Path:
@@ -106,8 +129,8 @@ def installed(key: str) -> bool:
 
 
 def status() -> dict:
-    return {k: {"installed": installed(k), "title": p.title, "size_mb": p.size_mb, "licence": p.licence}
-            for k, p in PACKAGES.items()}
+    return {k: {"installed": installed(k), "title": PACKAGES[k].title, "size_mb": PACKAGES[k].size_mb,
+                "licence": PACKAGES[k].licence} for k in available()}
 
 
 def _sha256(path: Path) -> str:
@@ -123,12 +146,13 @@ def _local_root() -> Path | None:
     return p if p.exists() else None
 
 
-def _fetch(pkg: Package, asset: Asset, dest: Path, progress) -> None:
-    root = _local_root()
+def _fetch(pkg: Package, asset: Asset, dest: Path, progress, local: bool = True) -> bool:
+    """Copies the local file when there is one (→ True), else downloads the release asset (→ False)."""
+    root = _local_root() if local else None
     if root and (root / asset.local).exists():
         progress(f"{asset.name}: local copy")
         shutil.copyfile(root / asset.local, dest)
-        return
+        return True
     url = f"{RELEASES}/{asset.tag or pkg.tag}/{asset.name}"
     progress(f"{asset.name}: downloading {url}")
     with urllib.request.urlopen(url) as r, open(dest, "wb") as out:
@@ -145,6 +169,7 @@ def _fetch(pkg: Package, asset: Asset, dest: Path, progress) -> None:
                 if pct != last and pct % 5 == 0:
                     progress(f"{asset.name}: {pct}%")
                     last = pct
+    return False
 
 
 def _unzip(zip_path: Path, target: Path, members: tuple = ()) -> None:
@@ -176,7 +201,9 @@ def install(key: str, progress=print, force: bool = False) -> Path:
         unpacked.mkdir()
         for asset in pkg.assets:
             tmp = stage / asset.name
-            _fetch(pkg, asset, tmp, progress)
+            if _fetch(pkg, asset, tmp, progress) and _sha256(tmp) != asset.sha256:
+                progress(f"{asset.name}: the local copy is a different file, downloading the release")
+                _fetch(pkg, asset, tmp, progress, local=False)
             got = _sha256(tmp)
             if got != asset.sha256:
                 raise RuntimeError(f"{asset.name}: checksum mismatch (expected {asset.sha256[:12]}…, got {got[:12]}…)")
@@ -202,12 +229,32 @@ def remove(key: str) -> None:
     shutil.rmtree(folder(key), ignore_errors=True)
 
 
+def switch_translator(engine: str, progress=print) -> None:
+    """Mac with Apple Silicon: the chosen translator is installed (downloaded if it is not there), becomes the
+    translator, and only then the other one is removed — a failed download changes nothing."""
+    from . import system
+    if not system.can_choose():
+        raise RuntimeError("this computer has no choice of translator")
+    if engine not in system.ENGINES:
+        raise ValueError(f"unknown translator {engine!r}")
+    install(engine, progress)
+    system.set_translator(engine)
+    for other in system.ENGINES:
+        if other != engine and folder(other).exists():
+            remove(other)
+            progress(f"{other}: removed")
+
+
 def main(argv=None) -> int:
-    """kabardian-download-models [kbd madlad silero baltic | all] [--force]"""
+    """kabardian-download-models [kbd madlad small100 silero baltic | all] [--force]; all = what this system uses;
+    kabardian-download-models use madlad|small100 — switch the translator on a Mac with Apple Silicon"""
     args = argv if argv is not None else sys.argv[1:]
     force = "--force" in args
     args = [a for a in args if a != "--force"]
-    keys = list(PACKAGES) if not args or args == ["all"] else args
+    if args[:1] == ["use"] and len(args) == 2:
+        switch_translator(args[1])
+        return 0
+    keys = available() if not args or args == ["all"] else args
     for k in keys:
         if k not in PACKAGES:
             print(f"unknown package {k!r}; known: {', '.join(PACKAGES)}")

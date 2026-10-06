@@ -1,10 +1,15 @@
 """The languages of the translator: names in the three interface languages, script, how a pair is routed,
 measured quality and which voice reads it.
 
-Quality is chrF on FLORES-200 devtest: for MADLAD the first 50 sentences, greedy, as measured for the SayFable
-app (prompt 405); for Kabardian all 200 sentences through the app's pipeline (prompt 410). "via ru" / "via en"
-mark languages that MADLAD translates better through a pivot, and the pivot is applied automatically.
+Which engine translates depends on the computer (`system.translator()`): MADLAD or SMaLL-100 by the user's choice on
+a Mac with Apple Silicon, SMaLL-100 elsewhere; it decides the language list, the routes and the quality shown.
+
+Quality is chrF on FLORES-200 devtest, the first 50 sentences, greedy: for MADLAD as measured for the SayFable app
+(prompt 405), for SMaLL-100 measured with this package's engine (prompt 418); for Kabardian all 200 sentences through
+the app's pipeline (prompt 410). "via ru" / "via en" mark languages that an engine translates better through a pivot,
+and the pivot is applied automatically.
 """
+from .system import IS_MAC, IS_WINDOWS, translator
 
 # code: (Russian, English, Latvian, script, group)
 LANGS = {
@@ -75,6 +80,23 @@ QUALITY = {
 }
 KBD_QUALITY = {"ru→kbd": 57.4, "kbd→ru": 50.2}
 
+# SMaLL-100 (FLORES-200, first 50 sentences, greedy, this package's engine): (en→xx, ru→xx, xx→en, xx→ru)
+QUALITY_SMALL = {
+    "az": (29.5, 28.6, 39.9, 35.5), "be": (32.3, 31.6, 43.7, 41.5), "bg": (61.0, 53.3, 57.5, 48.3),
+    "cs": (49.7, 42.4, 57.4, 47.1), "da": (61.6, 49.1, 63.2, 47.3), "de": (54.1, 47.6, 58.4, 47.2),
+    "el": (48.9, 43.1, 55.6, 43.2), "en": (None, 53.3, None, 50.9), "es": (50.5, 45.7, 54.3, 44.2),
+    "et": (49.2, 45.7, 52.9, 44.4), "fi": (47.0, 42.9, 51.1, 44.0), "fr": (61.9, 52.5, 61.3, 49.7),
+    "hr": (51.9, 46.0, 54.7, 46.5), "hu": (51.3, 44.7, 51.8, 45.8), "hy": (33.9, 33.0, 48.9, 38.1),
+    "it": (53.1, 46.1, 54.2, 43.9), "ka": (29.5, 28.6, 43.1, 37.9), "kk": (29.0, 29.3, 39.0, 34.2),
+    "lt": (51.3, 46.7, 51.3, 45.8), "lv": (45.8, 40.8, 53.2, 45.1), "nl": (51.9, 46.6, 53.1, 43.4),
+    "pl": (46.8, 42.1, 51.5, 44.1), "pt": (63.5, 51.2, 63.2, 51.5), "ro": (60.3, 49.2, 64.8, 50.9),
+    "ru": (50.9, None, 53.3, None), "sk": (50.5, 45.7, 55.6, 46.8), "sl": (50.2, 46.8, 54.0, 45.1),
+    "sv": (58.3, 46.6, 60.5, 46.8), "tr": (48.9, 41.6, 54.7, 42.0), "uk": (52.5, 51.3, 55.9, 52.1),
+}
+# languages SMaLL-100 does not offer: not in the model (ky, tt, tg, ca, no) or failing in it (ba, uz — prompt 379)
+NOT_IN_SMALL = {"ky", "tt", "tg", "ca", "no", "ba", "uz"}
+SMALL_VIA_EN = {"lv", "az", "ka", "kk", "tr", "be"}    # the measured English pivot (from lv az ka kk tr, to lv be tr)
+
 VIA_RU_TARGETS = {"ba", "be", "tt", "tg", "ka"}   # MADLAD writes them far better from Russian (en→ba 27.7 → 42.9)
 VIA_EN_FROM_RU = {"hy", "tr"}               # ru→hy 28.0 → 45.3, ru→tr 48.5 → 54.8 through English
 
@@ -96,6 +118,19 @@ APPLE_LOCALES = {
 }
 
 
+ENGINE_NAMES = {"madlad": "MADLAD-400", "small100": "SMaLL-100"}
+
+
+def available() -> list:
+    """The language codes this computer translates."""
+    small = translator() == "small100"
+    return [c for c in LANGS if not small or c not in NOT_IN_SMALL]
+
+
+def engine_name() -> str:
+    return ENGINE_NAMES[translator()]
+
+
 def name(code: str, ui: str = "en") -> str:
     ru, en, lv, *_ = LANGS[code]
     return {"ru": ru, "lv": lv}.get(ui, en)
@@ -111,6 +146,8 @@ def route(src: str, tgt: str) -> list:
         return [("kbd", "kbd", "ru")] + route("ru", tgt)
     if tgt == "kbd":
         return route(src, "ru") + [("kbd", "ru", "kbd")]
+    if translator() == "small100":
+        return [("small100", src, tgt)]                 # the engine applies its own English pivot
     if tgt in VIA_RU_TARGETS and src != "ru":
         return [("madlad", src, "ru"), ("madlad", "ru", tgt)]
     if src == "ru" and tgt in VIA_EN_FROM_RU:
@@ -121,13 +158,17 @@ def route(src: str, tgt: str) -> list:
 def describe(ui: str = "en") -> list:
     """Rows for the languages page."""
     rows = []
-    for code, (_, _, _, script, group) in LANGS.items():
-        q = QUALITY.get(code)
+    small = translator() == "small100"
+    for code in available():
+        _, _, _, script, group = LANGS[code]
+        q = (QUALITY_SMALL if small else QUALITY).get(code)
         engine, voice = SPEECH.get(code, (None, None))
         if engine is None and code in APPLE_LOCALES:
-            engine = "apple"
+            engine = "apple" if IS_MAC else "windows" if IS_WINDOWS else None
         if code == "kbd":
             how = "kbd"
+        elif small:
+            how = "via_en" if code in SMALL_VIA_EN else "direct"
         elif code in VIA_RU_TARGETS:
             how = "via_ru"
         else:

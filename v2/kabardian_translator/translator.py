@@ -2,7 +2,8 @@
 
 A text is split into paragraphs (line structure is kept) and every paragraph goes through the route of the pair
 (`languages.route`): Russian ↔ Kabardian on our model, Kabardian with anything else through Russian, the rest on
-MADLAD (with its measured pivots). MADLAD works sentence by sentence; the Kabardian engine makes its own units.
+MADLAD (Macs with Apple Silicon) or SMaLL-100 (elsewhere), each with its measured pivots. Both work sentence by
+sentence; the Kabardian engine makes its own units.
 Long texts run as background jobs that report progress and hand out the translation as it grows.
 """
 from __future__ import annotations
@@ -74,6 +75,7 @@ def align(original: str, translation: str) -> list:
 class Translator:
     def __init__(self):
         self._madlad = None
+        self._small = None
         self._kbd = None
         self._load_lock = threading.Lock()
 
@@ -89,6 +91,16 @@ class Translator:
             return self._madlad
 
     @property
+    def small(self):
+        with self._load_lock:
+            if self._small is None:
+                if not models.installed("small100"):
+                    raise RuntimeError("model 'small100' is not installed: run kabardian-download-models small100")
+                from .engines.small100 import Small100
+                self._small = Small100()
+            return self._small
+
+    @property
     def kbd(self):
         with self._load_lock:
             if self._kbd is None:
@@ -98,14 +110,21 @@ class Translator:
                 self._kbd = KbdTranslator()
             return self._kbd
 
+    def unload(self) -> None:
+        """Drops the loaded translators (the engine was switched and one of them is gone)."""
+        with self._load_lock:
+            self._madlad = self._small = None
+
     def loaded(self) -> dict:
-        return {"madlad": self._madlad is not None, "kbd": self._kbd is not None}
+        return {"madlad": self._madlad is not None, "small100": self._small is not None, "kbd": self._kbd is not None}
 
     # -- one segment through the route of the pair
     def _route(self, text: str, src: str, tgt: str, beams: int) -> str:
         for engine, a, b in languages.route(src, tgt):
             if engine == "kbd":
                 text = self.kbd.translate(text, a, b, beams=beams)
+            elif engine == "small100":
+                text = self.small.translate(text, a, b)
             else:
                 text = " ".join(self.madlad.translate_sentence(s, b) for s in split_sentences(text))
         return text

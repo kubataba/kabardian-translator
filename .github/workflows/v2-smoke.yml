@@ -1,0 +1,32 @@
+name: v2 smoke test
+
+on:
+  push:
+    paths: ["v2/**", ".github/workflows/v2-smoke.yml"]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build and install the wheel
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel --outdir dist v2
+          python -m pip install dist/*.whl
+      - name: Download the models of this system
+        run: kabardian-download-models all
+      - name: Smoke test
+        run: python v2/tests/smoke.py

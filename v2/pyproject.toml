@@ -5,15 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kabardian-translator"
 version = "3.0.0"
-description = "Local translation and speech for Kabardian and 36 more languages on macOS (Apple Silicon): our Kabardian model, MADLAD-400 on the Neural Engine, Silero, Baltic and Apple voices"
+description = "Local translation and speech for Kabardian and 30-37 more languages on macOS, Linux and Windows: our Kabardian model, MADLAD-400 (Apple Silicon) or SMaLL-100, Silero, Baltic, Apple and Windows voices"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "CC-BY-NC-4.0"
 license-files = ["LICENSE"]
 authors = [{ name = "Eduard Emkuzhev (kubataba)", email = "info@copperline.info" }]
-keywords = ["kabardian", "circassian", "translation", "madlad", "tts", "silero", "piper", "coreml", "onnx"]
+keywords = ["kabardian", "circassian", "translation", "madlad", "small100", "tts", "silero", "piper", "coreml", "onnx"]
 classifiers = [
     "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Topic :: Text Processing :: Linguistic",
     "Environment :: Web Environment",
@@ -23,10 +25,16 @@ dependencies = [
     "flask>=3.0",
     "numpy>=1.24",
     "onnxruntime>=1.20",
-    "coremltools>=8.0",
+    "coremltools>=8.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "sentencepiece>=0.2",
     "soundfile>=0.12",
     "python-docx>=1.1",
+    "comtypes>=1.4; sys_platform == 'win32'",
+    "winrt-runtime>=2.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation>=2.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation.Collections>=2.0; sys_platform == 'win32'",
+    "winrt-Windows.Media.SpeechSynthesis>=2.0; sys_platform == 'win32'",
+    "winrt-Windows.Storage.Streams>=2.0; sys_platform == 'win32'",
 ]
 
 [project.urls]
@@ -42,4 +50,4 @@ kabardian-download-models = "kabardian_translator.cli:download_models"
 packages = ["kabardian_translator", "kabardian_translator.engines", "kabardian_translator.tts"]
 
 [tool.setuptools.package-data]
-kabardian_translator = ["templates/*.html", "data/*.json", "data/stress/*", "bin/baltic-phonemes"]
+kabardian_translator = ["templates/*.html", "data/*.json", "data/stress/*"]

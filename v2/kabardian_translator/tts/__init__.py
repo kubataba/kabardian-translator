@@ -1,8 +1,9 @@
 """Speech: which engine reads which language, and one entry point that returns a WAV file.
 
 Silero v5 (Russian, Kabardian, Ukrainian, Belarusian, Kazakh, Kyrgyz, Tatar, Bashkir, Uzbek, Azerbaijani, Tajik;
-Georgian and Armenian through the Kabardian voice), the Baltic Piper model (Latvian, Lithuanian, Estonian), and the
-Apple voices installed on the Mac for everything else — and as an alternative wherever one is installed.
+Georgian and Armenian through the Kabardian voice) and the Baltic Piper model (Latvian, Lithuanian, Estonian) on every
+system; the system's own voices for everything else — and as an alternative wherever one is installed: Apple voices
+on macOS, Windows voices (OneCore and SAPI) on Windows. Linux has no system voices worth using.
 """
 from __future__ import annotations
 
@@ -12,7 +13,18 @@ import threading
 import numpy as np
 
 from .. import languages, models
-from . import apple
+from ..system import SYSTEM_VOICES
+
+
+def _system():
+    """The module of this system's voices, or None."""
+    if SYSTEM_VOICES == "apple":
+        from . import apple
+        return apple
+    if SYSTEM_VOICES == "windows":
+        from . import windows
+        return windows
+    return None
 
 
 class Speech:
@@ -53,8 +65,16 @@ class Speech:
                     out.append({"id": f"baltic:{v['speaker']}", "label": f"{v['name']} ({v['sex']})", "engine": "baltic"})
             except Exception:
                 pass
-        for v in apple.for_language(lang)[:8]:
-            out.append({"id": f"apple:{v['name']}", "label": f"Apple · {v['name']}", "engine": "apple"})
+        sysv = _system()
+        if sysv is not None:
+            try:
+                for v in sysv.for_language(lang)[:8]:
+                    if SYSTEM_VOICES == "apple":
+                        out.append({"id": f"apple:{v['name']}", "label": f"Apple · {v['name']}", "engine": "apple"})
+                    else:
+                        out.append({"id": f"win:{v['id']}", "label": f"Windows · {v['name']}", "engine": "windows"})
+            except Exception:
+                pass
         return out
 
     def synthesize(self, text: str, lang: str, voice: str | None = None, speed: float = 1.0):
@@ -68,7 +88,11 @@ class Speech:
         if voice.startswith("baltic:"):
             return self.baltic.synthesize(text, lang, voice.split(":", 1)[1], speed), 22050
         if voice.startswith("apple:"):
+            from . import apple
             return apple.synthesize(text, lang, voice.split(":", 1)[1], speed), apple.SAMPLE_RATE
+        if voice.startswith("win:"):
+            from . import windows
+            return windows.synthesize(text, lang, voice.split(":", 1)[1], speed)
         raise RuntimeError(f"unknown voice {voice!r}")
 
     def synthesize_marked(self, text: str, lang: str, voice: str | None = None, speed: float = 1.0):
@@ -81,8 +105,7 @@ class Speech:
         if not opts:
             raise RuntimeError(f"no voice for {lang!r}")
         voice = voice or opts[0]["id"]
-        rate = 48000 if voice == "silero" else 22050
-        pause = np.zeros(int(0.18 * rate), np.float32)
+        rate = 48000 if voice == "silero" else 22050 if voice.startswith(("baltic:", "apple:")) else None
         chunks, sentences, words, t, pos = [], [], [], 0.0, 0
         for sent in split_sentences(text):
             start = text.find(sent, pos)
@@ -93,11 +116,14 @@ class Speech:
                 words += [{"start": start + a, "end": start + b, "t0": round(float(t + t0), 3), "t1": round(float(t + t1), 3)}
                           for a, b, t0, t1 in w]
             else:
-                y, _ = self.synthesize(sent, lang, voice, speed)
+                y, got = self.synthesize(sent, lang, voice, speed)
+                rate = rate or got                       # a Windows voice reports its own rate
             dur = len(y) / rate
             sentences.append({"start": start, "end": start + len(sent), "t0": round(float(t), 3), "t1": round(float(t + dur), 3)})
+            pause = np.zeros(int(0.18 * rate), np.float32)
             chunks += [y, pause]
             t += dur + len(pause) / rate
+        rate = rate or 22050
         samples = np.concatenate(chunks) if chunks else np.zeros(int(0.35 * rate), np.float32)
         return samples, rate, sentences, words
 

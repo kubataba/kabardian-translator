@@ -7,7 +7,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, send_file
 
-from . import __version__, documents, languages, models
+from . import __version__, documents, languages, models, system
 from .translator import Jobs, Translator
 from .tts import Speech
 
@@ -33,7 +33,46 @@ def api_languages():
     for r in rows:
         r["voices"] = [o["engine"] for o in speech.options(r["code"])][:1]
     groups = {g: dict(zip(("ru", "en", "lv"), names)).get(ui) for g, names in languages.GROUPS.items()}
-    return jsonify({"languages": rows, "groups": groups})
+    return jsonify({"languages": rows, "groups": groups, "engine": languages.engine_name(),
+                    "engine_key": system.translator(), "can_choose": system.can_choose()})
+
+
+switching = {}                                                  # the translator switch in progress: state, log
+
+
+@app.get("/api/translator")
+def api_translator():
+    return jsonify({"engine": system.translator(), "name": languages.engine_name(), "can_choose": system.can_choose(),
+                    "switch": switching or None})
+
+
+@app.post("/api/translator")
+def api_translator_switch():
+    """Mac with Apple Silicon: install the chosen translator, switch to it, remove the other one."""
+    engine = (request.get_json(force=True) or {}).get("engine")
+    if not system.can_choose():
+        return jsonify({"error": "no choice of translator on this computer"}), 400
+    if engine not in system.ENGINES:
+        return jsonify({"error": "unknown translator"}), 400
+    if switching.get("state") == "running":
+        return jsonify({"state": "running"})
+    if any(j["state"] in ("queued", "running") for j in jobs.jobs.values()):
+        return jsonify({"error": "busy"}), 409
+    if engine == system.translator() and models.installed(engine):
+        return jsonify({"state": "done"})
+    switching.clear()
+    switching.update(state="running", engine=engine, log=[])
+
+    def run():
+        try:
+            with jobs.run_lock:                                 # no translation starts while the model changes
+                models.switch_translator(engine, progress=lambda m: switching["log"].append(m))
+                translator.unload()
+            switching["state"] = "done"
+        except Exception as e:
+            switching.update(state="error", error=str(e))
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"state": "running"})
 
 
 @app.get("/api/models")
@@ -70,7 +109,7 @@ def api_translate():
     src, tgt = d.get("src", "ru"), d.get("tgt", "kbd")
     if not text.strip():
         return jsonify({"error": "empty"}), 400
-    if src not in languages.LANGS or tgt not in languages.LANGS:
+    if src not in languages.available() or tgt not in languages.available():
         return jsonify({"error": "unknown language"}), 400
     jid = jobs.start(text, src, tgt, beams=1 if d.get("fast") else 4)
     return jsonify({"job": jid})
@@ -82,7 +121,7 @@ def api_document():
     src, tgt = request.form.get("src", "ru"), request.form.get("tgt", "kbd")
     if not f:
         return jsonify({"error": "no file"}), 400
-    if src not in languages.LANGS or tgt not in languages.LANGS:
+    if src not in languages.available() or tgt not in languages.available():
         return jsonify({"error": "unknown language"}), 400
     try:
         text = documents.read(f.filename, f.read())
