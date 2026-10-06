@@ -53,7 +53,7 @@ def translate_cli(argv=None):
     ap.add_argument("-i", "--input", help=".txt, .md or .docx")
     ap.add_argument("-o", "--output", help=".txt or .docx (default: stdout)")
     ap.add_argument("--fast", action="store_true", help="greedy search for Kabardian (about 2× faster)")
-    ap.add_argument("--both", action="store_true", help="write the original and the translation together")
+    ap.add_argument("--both", action="store_true", help="original and translation sentence by sentence, both languages named")
     a = ap.parse_args(argv)
     _check_platform()
     if a.input:
@@ -69,13 +69,20 @@ def translate_cli(argv=None):
 
     def progress(done, total, _):
         print(f"\r{done}/{total} paragraphs  {time.time() - t0:.0f} s", end="", file=sys.stderr, flush=True)
-    out = tr.text(text, a.src, a.tgt, beams=1 if a.fast else 4, progress=progress if a.input else None)
+    pairs = []
+    out = tr.text(text, a.src, a.tgt, beams=1 if a.fast else 4, progress=progress if a.input else None, pairs=pairs)
     if a.input:
         print(file=sys.stderr)
     if a.output:
         fmt = "docx" if a.output.lower().endswith(".docx") else "txt"
-        Path(a.output).write_bytes(documents.write(out, fmt, text if a.both else None))
+        title = Path(a.input).stem if a.input else None
+        data = documents.write_bilingual(pairs, languages.name(a.src), languages.name(a.tgt), a.src, a.tgt, fmt, title) \
+            if a.both else documents.write(out, fmt, title=title)
+        Path(a.output).write_bytes(data)
         print(f"written {a.output}", file=sys.stderr)
+    elif a.both:
+        sys.stdout.write(documents.write_bilingual(pairs, languages.name(a.src), languages.name(a.tgt), a.src, a.tgt)
+                         .decode("utf-8"))
     else:
         print(out)
 

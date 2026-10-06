@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kabardian Translator</title>
+<script>try{const th=localStorage.getItem("theme");if(th)document.documentElement.dataset.theme=th}catch(e){}</script>
 <style>
-:root{--bg:#f6f5f1;--card:#fff;--fg:#1c1c1a;--muted:#6d6b64;--line:#e3e0d7;--accent:#2f6f5e;--accent-fg:#fff;
-  --soft:#eaf3ef;--warn:#9a6a00;--warnbg:#fff6dc;--err:#a3332b;--errbg:#fde9e7;--shadow:0 1px 2px rgba(0,0,0,.05)}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;
+/* light: warm paper, never pure white; dark: the original palette. data-theme (☀/☾ in the header) overrides the system */
+:root{color-scheme:light;--bg:#ebe6db;--card:#f5f1e8;--fg:#2d2a24;--muted:#736c60;--line:#d6cebe;--accent:#2f6f5e;
+  --accent-fg:#f5f1e8;--soft:#dde5da;--warn:#865c00;--warnbg:#f3e7c8;--err:#9e3128;--errbg:#f3ddd8;
+  --shadow:0 1px 3px rgba(70,55,30,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;
   --line:#33342f;--accent:#7fc4ae;--accent-fg:#10201b;--soft:#1f2c27;--warn:#e2bd5c;--warnbg:#2b2617;--err:#f09b92;--errbg:#3a1f1c}}
-:root[data-theme=dark]{--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;--line:#33342f;--accent:#7fc4ae;--accent-fg:#10201b;
+:root[data-theme=dark]{color-scheme:dark;--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;--line:#33342f;--accent:#7fc4ae;--accent-fg:#10201b;
   --soft:#1f2c27;--warn:#e2bd5c;--warnbg:#2b2617;--err:#f09b92;--errbg:#3a1f1c}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -41,6 +44,11 @@ textarea,.out{flex:1;width:100%;border:0;resize:vertical;background:transparent;
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
 .btn:disabled{opacity:.45;cursor:default}
+.menuwrap{position:relative}
+.menu{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:20;min-width:300px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.menu.on{display:block}
+.mrow{display:flex;align-items:center;gap:6px;padding:6px 6px;font-size:14px}
+.mrow+.mrow{border-top:1px solid var(--line)}
 .muted{color:var(--muted)}.small{font-size:13px}.grow{flex:1}
 .progress{height:4px;background:var(--line);overflow:hidden}
 .progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
@@ -74,6 +82,7 @@ tr.grp td{background:var(--soft);font-weight:700}
     <button data-tab="models" data-i="tab_models"></button>
     <button data-tab="about" data-i="tab_about"></button>
   </nav>
+  <div class="seg" id="theme"><button data-th="light">☀</button><button data-th="dark">☾</button></div>
   <div class="seg" id="ui"><button data-ui="ru">RU</button><button data-ui="en">EN</button><button data-ui="lv">LV</button></div>
 </header>
 <main>
@@ -106,9 +115,15 @@ tr.grp td{background:var(--soft);font-weight:700}
           <select id="voice" style="min-width:150px"></select>
           <button class="btn" id="copy" data-i="copy"></button>
           <span class="grow"></span>
-          <button class="btn" id="dl-txt">.txt</button>
-          <button class="btn" id="dl-docx">.docx</button>
-          <label class="chk small"><input type="checkbox" id="both"><span data-i="both"></span></label>
+          <span class="menuwrap">
+            <button class="btn" id="save" data-i="save" disabled></button>
+            <div class="menu" id="savemenu">
+              <div class="mrow"><span data-i="save_trans"></span><span class="grow"></span>
+                <button class="btn" data-mode="translation" data-fmt="txt">.txt</button><button class="btn" data-mode="translation" data-fmt="docx">.docx</button></div>
+              <div class="mrow"><span data-i="save_both"></span><span class="grow"></span>
+                <button class="btn" data-mode="bilingual" data-fmt="txt">.txt</button><button class="btn" data-mode="bilingual" data-fmt="docx">.docx</button></div>
+            </div>
+          </span>
         </div>
       </div>
     </div>
@@ -152,7 +167,7 @@ tr.grp td{background:var(--soft);font-weight:700}
 <script>
 const T = {
  ru:{tab_translate:"Перевод",tab_languages:"Языки",tab_models:"Модели",tab_about:"О проекте",translate:"Перевести",
-  listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",both:"с оригиналом",fast:"быстрый кабардинский (жадный поиск)",
+  listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",theme_light:"Светлая тема",theme_dark:"Тёмная тема",save:"Сохранить…",save_trans:"Только перевод",save_both:"Оригинал и перевод по предложениям",fast:"быстрый кабардинский (жадный поиск)",
   speed:"темп",doc_title:"Документ",doc_hint:".txt, .md или .docx любого размера: перевод идёт по абзацам, результат можно скачать.",
   doc_pick:"Выбрать файл…",placeholder:"Введите или вставьте текст любой длины — или перетащите сюда файл .txt, .md, .docx…",result:"Здесь появится перевод",
   chars:"знаков",progress:"абзац {d} из {t}",done:"готово за {s} с",working:"переводится…",loading:"первый запуск: модель загружается (до 1–2 минут)…",
@@ -173,7 +188,7 @@ const T = {
   <p>Требуется macOS на Apple Silicon. Для Windows и Linux остаётся версия 1 (каталог <code>v1/</code>).</p>
   <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Некоммерческое использование — CC BY-NC 4.0; модели — под своими лицензиями (вкладка «Модели»).</p>`},
  en:{tab_translate:"Translate",tab_languages:"Languages",tab_models:"Models",tab_about:"About",translate:"Translate",
-  listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",both:"with original",fast:"fast Kabardian (greedy search)",
+  listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",theme_light:"Light theme",theme_dark:"Dark theme",save:"Save…",save_trans:"Translation only",save_both:"Original and translation, sentence by sentence",fast:"fast Kabardian (greedy search)",
   speed:"pace",doc_title:"Document",doc_hint:".txt, .md or .docx of any size: translated paragraph by paragraph, ready to download.",
   doc_pick:"Choose a file…",placeholder:"Type or paste text of any length — or drop a .txt, .md or .docx file here…",result:"The translation appears here",
   chars:"characters",progress:"paragraph {d} of {t}",done:"done in {s} s",working:"translating…",loading:"first run: loading the model (up to 1–2 minutes)…",
@@ -194,7 +209,7 @@ const T = {
   <p>Requires macOS on Apple Silicon. Windows and Linux stay on version 1 (folder <code>v1/</code>).</p>
   <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Non-commercial use — CC BY-NC 4.0; models under their own licences (Models tab).</p>`},
  lv:{tab_translate:"Tulkošana",tab_languages:"Valodas",tab_models:"Modeļi",tab_about:"Par projektu",translate:"Tulkot",
-  listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",both:"ar oriģinālu",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
+  listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",theme_light:"Gaišā tēma",theme_dark:"Tumšā tēma",save:"Saglabāt…",save_trans:"Tikai tulkojums",save_both:"Oriģināls un tulkojums pa teikumiem",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
   speed:"temps",doc_title:"Dokuments",doc_hint:".txt, .md vai .docx jebkurā apjomā: tulko pa rindkopām, rezultātu var lejupielādēt.",
   doc_pick:"Izvēlēties failu…",placeholder:"Ievadiet vai ielīmējiet jebkura garuma tekstu — vai ievelciet šeit .txt, .md, .docx failu…",result:"Šeit parādīsies tulkojums",
   chars:"zīmes",progress:"rindkopa {d} no {t}",done:"gatavs {s} s",working:"tulko…",loading:"pirmā palaišana: ielādē modeli (līdz 1–2 minūtēm)…",
@@ -225,12 +240,23 @@ function applyUI(){
   document.documentElement.lang = ui;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
   document.querySelectorAll("#ui button").forEach(b => b.classList.toggle("on", b.dataset.ui === ui));
+  document.querySelectorAll("#theme button").forEach(b => b.title = t("theme_" + b.dataset.th));
+  applyTheme();
   $("#text").placeholder = t("placeholder");
   if(!lastResult){ $("#out").textContent = t("result"); }
   $("#abouttext").innerHTML = t("about");
   loadLanguages(); loadModels(); updateCount();
 }
 document.querySelectorAll("#ui button").forEach(b => b.onclick = () => { ui = b.dataset.ui; store.set("ui", ui); applyUI(); });
+// theme: the stored choice, else the system's; the button of the theme in effect is lit
+const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(){
+  const chosen = store.get("theme", null), eff = chosen || (darkQuery.matches ? "dark" : "light");
+  if (chosen) document.documentElement.dataset.theme = chosen; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll("#theme button").forEach(b => b.classList.toggle("on", b.dataset.th === eff));
+}
+document.querySelectorAll("#theme button").forEach(b => b.onclick = () => { store.set("theme", b.dataset.th); applyTheme(); });
+darkQuery.addEventListener("change", applyTheme);
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
@@ -297,7 +323,7 @@ function updateCount(){ $("#count").textContent = `${$("#text").value.length.toL
 $("#text").addEventListener("input", updateCount);
 $("#text").addEventListener("keydown", e => { if ((e.metaKey||e.ctrlKey) && e.key === "Enter") translate(); });
 $("#clear").onclick = () => { $("#text").value = ""; setOut(""); updateCount(); };
-function setOut(s){ if (typeof stopReading === "function" && P) stopReading(); lastResult = s; const o = $("#out"); o.textContent = s || t("result"); o.classList.toggle("empty", !s); }
+function setOut(s){ if (typeof stopReading === "function" && P && P.kind === "tgt") stopReading(); lastResult = s; const o = $("#out"); o.textContent = s || t("result"); o.classList.toggle("empty", !s); }
 function note(msg, err){ const n = $("#note"); n.textContent = msg||""; n.style.display = msg ? "block" : "none"; n.classList.toggle("err", !!err); }
 
 async function translate(){
@@ -311,7 +337,7 @@ async function translate(){
 $("#go").onclick = translate;
 
 function follow(id){
-  job = id; note(""); $("#go").disabled = true; setOut("");
+  job = id; note(""); $("#go").disabled = true; $("#save").disabled = true; setOut("");
   $("#status").textContent = t("working"); $("#prog").style.width = "2%";
   clearInterval(timer);
   timer = setInterval(async () => {
@@ -319,31 +345,37 @@ function follow(id){
     if (j.total) $("#prog").style.width = `${Math.max(2, 100*j.done/j.total)}%`;
     if (j.state === "queued" || (j.state === "running" && !j.done)) $("#status").textContent = t("loading");
     if (j.state === "running" && j.done) { $("#status").textContent = t("progress",{d:j.done,t:j.total}); setOut(j.partial); }
-    if (j.state === "done") { clearInterval(timer); setOut(j.result); $("#status").textContent = (j.name ? `📄 ${j.name} · ` : "") + t("done",{s:j.seconds}); $("#go").disabled = false; $("#prog").style.width = "100%"; }
+    if (j.state === "done") { clearInterval(timer); setOut(j.result); $("#status").textContent = (j.name ? `📄 ${j.name} · ` : "") + t("done",{s:j.seconds}); $("#go").disabled = false; $("#save").disabled = false; $("#prog").style.width = "100%"; }
     if (j.state === "error") { clearInterval(timer); $("#go").disabled = false; $("#status").textContent = ""; note(j.error.includes("not installed") ? t("nomodel") : j.error, true); }
   }, 700);
 }
 
-async function speak(text, lang, voice){
-  if (!text.trim()) return;
-  const r = await fetch("/api/speak", {method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({text, lang, voice, speed: +$("#rate").value})});
-  if (!r.ok) { const e = await r.json().catch(() => ({})); return note(e.error || "speech error", true); }
-  const url = URL.createObjectURL(await r.blob()); new Audio(url).play();
-}
-// ---- reading the translation aloud with highlighting: paragraph by paragraph, the next one prepared ahead
+// ---- reading aloud: the original (no highlighting — it is a text field) or the translation (sentence and word
+// highlighting). The text is read in units of a paragraph, long paragraphs cut at sentence ends, so the first sound
+// comes quickly; the next unit is prepared while the current one plays. ▶ turns into ■ and stops at once.
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-let P = null;   // {paras, idx, audio, data: {}, raf, lang, voice, speed}
+const UNIT = 320;   // characters: about 20–25 s of speech
+let P = null;   // {kind, paras, idx, audio, data: {}, raf, lang, voice, speed}
 function stopReading(){
   if (!P) return;
+  P.abort.abort();
   if (P.audio) { P.audio.pause(); P.audio.src = ""; }
   cancelAnimationFrame(P.raf); P = null;
   document.querySelectorAll("#out .hl").forEach(e => e.classList.remove("hl"));
-  $("#speak-tgt").textContent = t("listen");
+  $("#speak-tgt").textContent = t("listen"); $("#speak-src").textContent = t("listen");
 }
 function paragraphs(text){
   const out = []; const re = /[^\n]+/g; let m;
-  while ((m = re.exec(text))) if (m[0].trim()) out.push({start: m.index, end: m.index + m[0].length, text: m[0]});
+  while ((m = re.exec(text))) {
+    if (!m[0].trim()) continue;
+    const line = m[0], base = m.index, ends = [];
+    const se = /[.!?…]+["»”')\]]*\s+/g; let k;
+    while ((k = se.exec(line))) ends.push(k.index + k[0].length);
+    let start = 0, last = 0;
+    const push = (a, b) => { const body = line.slice(a, b).replace(/\s+$/, ""); if (body.trim()) out.push({start: base + a, end: base + a + body.length, text: body}); };
+    for (const e of ends) { if (e - start > UNIT && last > start) { push(start, last); start = last; } last = e; }
+    push(start, line.length);
+  }
   return out;
 }
 function renderOut(paras, text){
@@ -367,28 +399,37 @@ function renderParagraph(i){
     html += `<span class="s" data-s="${si}">${inner}</span>`; pos = s.end;
   });
   html += esc(p.text.slice(pos)); span.innerHTML = html; d.rendered = true;
-  span.querySelectorAll(".s").forEach(e => e.onclick = () => playFrom(i, d.sentences[+e.dataset.s].t0));
+  const paras = P.paras;
+  // a click on a sentence plays the translation from there — whatever was playing (the original too) stops
+  span.querySelectorAll(".s").forEach(e => e.onclick = () => {
+    const at = d.sentences[+e.dataset.s].t0;
+    if (P && P.kind === "tgt" && P.paras === paras) playFrom(i, at); else startReading("tgt", i, at);
+  });
 }
 function fetchParagraph(i){
   if (!P || i >= P.paras.length || P.data[i]) return P && P.data[i] && P.data[i].ready;
   const rec = P.data[i] = {};
   rec.ready = fetch("/api/speak_marked", {method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({text: P.paras[i].text, lang: P.lang, voice: P.voice, speed: P.speed})})
+      body: JSON.stringify({text: P.paras[i].text, lang: P.lang, voice: P.voice, speed: P.speed}), signal: P.abort.signal})
     .then(r => r.json()).then(j => { if (j.error) throw new Error(j.error); Object.assign(rec, j); return rec; });
+  rec.ready.catch(() => {});   // a stopped reading aborts its requests
   return rec.ready;
 }
 async function playFrom(i, at = 0){
   if (!P) return;
   if (i >= P.paras.length) return stopReading();
-  P.idx = i;
+  P.idx = i; const mine = P;
   let d;
-  try { d = await fetchParagraph(i); } catch (e) { note(e.message, true); return stopReading(); }
-  if (!P || P.idx !== i) return;
-  renderParagraph(i); fetchParagraph(i + 1);
+  try { d = await fetchParagraph(i); } catch (e) { if (P === mine) { note(e.message, true); stopReading(); } return; }
+  if (P !== mine || P.idx !== i) return;
+  const tgt = P.kind === "tgt";
+  if (tgt) renderParagraph(i);
+  fetchParagraph(i + 1);
   if (P.audio) { P.audio.pause(); }
   const a = P.audio = new Audio(d.audio); a.currentTime = at;
   a.onended = () => { if (P && P.audio === a) playFrom(i + 1); };
   a.play();
+  if (!tgt) return;
   const span = $(`#out .p[data-p="${i}"]`);
   const tick = () => {
     if (!P || P.audio !== a) return;
@@ -403,19 +444,30 @@ async function playFrom(i, at = 0){
   };
   cancelAnimationFrame(P.raf); P.raf = requestAnimationFrame(tick);
 }
-$("#speak-tgt").onclick = () => {
-  if (P) return stopReading();
-  if (!lastResult.trim()) return;
-  const paras = paragraphs(lastResult);
-  P = {paras, idx: 0, data: {}, lang: $("#tgt").value, voice: $("#voice").value, speed: +$("#rate").value};
-  renderOut(paras, lastResult);
-  $("#speak-tgt").textContent = t("stop");
-  playFrom(0);
-};
-$("#speak-src").onclick = () => speak($("#text").value, $("#src").value, null);
+function startReading(kind, from = null, at = 0){
+  const was = P && P.kind;
+  stopReading();                                  // only one reading at a time: a new one stops the previous
+  if (was === kind && from === null) return;      // the same button again = stop
+  const text = kind === "tgt" ? lastResult : $("#text").value;
+  if (!text.trim()) return;
+  const paras = paragraphs(text);
+  P = {kind, paras, idx: 0, data: {}, abort: new AbortController(), speed: +$("#rate").value,
+       lang: kind === "tgt" ? $("#tgt").value : $("#src").value, voice: kind === "tgt" ? $("#voice").value : null};
+  if (kind === "tgt") renderOut(paras, lastResult);
+  $(kind === "tgt" ? "#speak-tgt" : "#speak-src").textContent = t("stop");
+  playFrom(from || 0, at);
+}
+$("#speak-tgt").onclick = () => startReading("tgt");
+$("#speak-src").onclick = () => startReading("src");
+$("#text").addEventListener("input", () => { if (P && P.kind === "src") stopReading(); });
 $("#copy").onclick = async () => { if (!lastResult) return; await navigator.clipboard.writeText(lastResult); $("#status").textContent = t("copied"); };
-function download(fmt){ if (job && lastResult) location.href = `/api/jobs/${job}/download?format=${fmt}&both=${$("#both").checked?1:0}`; }
-$("#dl-txt").onclick = () => download("txt"); $("#dl-docx").onclick = () => download("docx");
+// saving: the translation alone, or original and translation sentence by sentence
+$("#save").onclick = ev => { ev.stopPropagation(); $("#savemenu").classList.toggle("on"); };
+document.addEventListener("click", ev => { if (!ev.target.closest(".menuwrap")) $("#savemenu").classList.remove("on"); });
+document.querySelectorAll("#savemenu button").forEach(b => b.onclick = () => {
+  $("#savemenu").classList.remove("on");
+  if (job && lastResult) location.href = `/api/jobs/${job}/download?format=${b.dataset.fmt}&mode=${b.dataset.mode}&ui=${ui}`;
+});
 
 // documents
 const drop = $("#drop");

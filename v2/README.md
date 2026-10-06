@@ -12,9 +12,12 @@ runs on your computer — no text leaves it.
   Uzbek, Azerbaijani, Tajik; Georgian and Armenian through the Kabardian voice), **our Baltic model** (Latvian,
   Lithuanian, Estonian — 18 voices) and the **Apple voices** installed on the Mac for the rest.
 - **No length limit** — texts and documents (`.txt`, `.md`, `.docx`) are translated paragraph by paragraph with
-  progress; the result downloads as `.txt` or `.docx`, alone or side by side with the original.
+  progress. **Save** writes `.txt` or `.docx`: the translation alone, or the original and the translation sentence
+  by sentence with both languages named (a two-column table in `.docx`).
+- **Listening** — both the original and the translation; ▶ turns into ■ and stops at once. The translation is
+  highlighted while it is read (sentences; words for Silero voices), and a click on a sentence plays from it.
 - **Interface in Russian, English and Latvian**, with a page describing every language: script, route, measured
-  quality, voice.
+  quality, voice. Light (warm paper) and dark themes, switched with ☀/☾; until chosen, the system's is used.
 
 > Windows and Linux: use version 2.0 (`pip install "kabardian-translator<3"`, folder `v1/` of this repository).
 
@@ -38,7 +41,7 @@ kabardian-translate -s kbd -t lv -i text.txt -o text.lv.txt --fast
 ```
 
 `--fast` uses greedy search for the Kabardian model (about twice as fast, −1 chrF); `--both` writes the original
-and the translation paragraph by paragraph.
+and the translation sentence by sentence, each line marked with its language code.
 
 ## Languages
 

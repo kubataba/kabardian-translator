@@ -1,5 +1,5 @@
 """Documents in and out: .txt / .md / .docx are read as paragraphs; the translation is written back as .txt or
-.docx (paragraph for paragraph), optionally side by side with the original."""
+.docx — the translation alone, or original and translation sentence by sentence with both languages named."""
 from __future__ import annotations
 
 import io
@@ -27,33 +27,48 @@ def read(name: str, data: bytes) -> str:
     raise ValueError("cannot decode the file")
 
 
-def _pairs(original: str, translation: str):
-    a = [p for p in original.split("\n") if p.strip()]
-    b = [p for p in translation.split("\n") if p.strip()]
-    return list(zip(a, b)) if len(a) == len(b) else None
-
-
-def write(translation: str, fmt: str = "txt", original: str | None = None, title: str | None = None) -> bytes:
-    """fmt: txt | docx; with `original` the file holds both texts, paragraph by paragraph."""
-    pairs = _pairs(original, translation) if original else None
+def write(translation: str, fmt: str = "txt", title: str | None = None) -> bytes:
+    """The translation alone, paragraph for paragraph. fmt: txt | docx."""
     if fmt == "docx":
         import docx
         d = docx.Document()
         if title:
             d.add_heading(title, level=1)
-        if pairs:
-            for src, tgt in pairs:
-                d.add_paragraph(src).runs[0].italic = True
-                d.add_paragraph(tgt)
-        else:
-            for p in translation.split("\n"):
-                if p.strip():
-                    d.add_paragraph(p)
+        for p in translation.split("\n"):
+            if p.strip():
+                d.add_paragraph(p)
         buf = io.BytesIO()
         d.save(buf)
         return buf.getvalue()
-    if pairs:
-        text = "\n\n".join(f"{s}\n{t}" for s, t in pairs)
-    else:
-        text = translation
-    return (text.rstrip() + "\n").encode("utf-8")
+    return (translation.rstrip() + "\n").encode("utf-8")
+
+
+def write_bilingual(pairs: list, src_name: str, tgt_name: str, src: str, tgt: str, fmt: str = "txt",
+                    title: str | None = None) -> bytes:
+    """`pairs`: one list of (original, translation) per paragraph. The header names both languages; every sentence
+    is followed by its translation, each line marked with its language code (.txt) or in its column (.docx)."""
+    head = f"{src_name} ({src}) → {tgt_name} ({tgt})"
+    if fmt == "docx":
+        import docx
+        d = docx.Document()
+        if title:
+            d.add_heading(title, level=1)
+        d.add_paragraph(head)
+        table = d.add_table(rows=1, cols=2)
+        table.style = "Table Grid"
+        table.rows[0].cells[0].text, table.rows[0].cells[1].text = f"{src_name} ({src})", f"{tgt_name} ({tgt})"
+        for cell in table.rows[0].cells:
+            cell.paragraphs[0].runs[0].bold = True
+        for para in pairs:
+            for a, b in para:
+                row = table.add_row().cells
+                row[0].text, row[1].text = a, b
+        buf = io.BytesIO()
+        d.save(buf)
+        return buf.getvalue()
+    lines = ([title, ""] if title else []) + [head, ""]
+    for para in pairs:
+        for a, b in para:
+            lines += [f"[{src}] {a}", f"[{tgt}] {b}", ""]
+        lines.append("")
+    return ("\n".join(lines).rstrip() + "\n").encode("utf-8")

@@ -27,12 +27,48 @@ def split_sentences(text: str) -> list:
         if not nxt:
             continue
         # Georgian (Mkhedruli) has no capitals at a sentence start, so any Georgian letter opens a sentence
+        # Kabardian may open a sentence with a lowercase palochka («ӏушэ»)
         if nxt[0].isupper() or nxt[0].isdigit() or (nxt[0].isalpha() and not nxt[0].islower()) \
-                or "ა" <= nxt[0] <= "ჿ":
+                or "ა" <= nxt[0] <= "ჿ" or nxt[0] in "ӏӀ":
             out.append(text[pos:m.end()].strip())
             pos = m.end()
     out.append(text[pos:].strip())
     return [s for s in out if s]
+
+
+_OPEN_CLOSE = (("«", "»"), ("(", ")"), ("[", "]"))
+
+
+def _closed(text: str) -> bool:
+    """No quotation or bracket is left open (a stray closer does not hold the segment open)."""
+    if any(text.count(a) > text.count(b) for a, b in _OPEN_CLOSE):
+        return False
+    return text.count('"') % 2 == 0 and (text.count("„") + text.count("“") + text.count("”")) % 2 == 0
+
+
+def segments(text: str, limit: int = 1500) -> list:
+    """The units a paragraph is translated in, and paired in a bilingual file: sentences, except that a quotation or
+    a bracket running over several sentences stays one segment — the Kabardian engine treats direct speech and notes
+    as a whole. A segment that never closes (a stray quote) is cut at `limit` characters."""
+    out, buf = [], ""
+    for s in split_sentences(text):
+        buf = f"{buf} {s}" if buf else s
+        if _closed(buf) or len(buf) >= limit:
+            out.append(buf)
+            buf = ""
+    if buf:
+        out.append(buf)
+    return out
+
+
+def align(original: str, translation: str) -> list:
+    """Sentence pairs of a paragraph translated as a whole: segments, else plain sentences, matched one to one when
+    both sides have as many; otherwise the paragraph is one pair."""
+    for split in (segments, split_sentences):
+        a, b = split(original), split(translation)
+        if len(a) == len(b):
+            return list(zip(a, b))
+    return [(original.strip(), translation.strip())]
 
 
 class Translator:
@@ -65,10 +101,8 @@ class Translator:
     def loaded(self) -> dict:
         return {"madlad": self._madlad is not None, "kbd": self._kbd is not None}
 
-    # -- one paragraph
-    def paragraph(self, text: str, src: str, tgt: str, beams: int = 4) -> str:
-        if not text.strip() or not re.search(r"\w", text):
-            return text
+    # -- one segment through the route of the pair
+    def _route(self, text: str, src: str, tgt: str, beams: int) -> str:
         for engine, a, b in languages.route(src, tgt):
             if engine == "kbd":
                 text = self.kbd.translate(text, a, b, beams=beams)
@@ -76,14 +110,32 @@ class Translator:
                 text = " ".join(self.madlad.translate_sentence(s, b) for s in split_sentences(text))
         return text
 
-    # -- any text: paragraphs, line structure kept
-    def text(self, text: str, src: str, tgt: str, beams: int = 4, progress=None) -> str:
+    # -- one paragraph: [(original, translation)] for the bilingual file
+    def paragraph_pairs(self, text: str, src: str, tgt: str, beams: int = 4) -> list:
+        """MADLAD routes are translated segment by segment, so their pairs are exact (MADLAD works by sentence anyway,
+        the text is the same). A route through the Kabardian engine translates the whole paragraph, as before: the
+        engine splits a dialogue line into replicas and author's words itself, and cutting the line earlier changes
+        the translation (10 of 60 paragraphs of Chekhov's «Тоска»); its pairs are aligned afterwards."""
+        if not text.strip() or not re.search(r"\w", text):
+            return [(text, text)]
+        if all(engine != "kbd" for engine, _, _ in languages.route(src, tgt)):
+            return [(seg, self._route(seg, src, tgt, beams)) for seg in segments(text)]
+        return align(text, self._route(text, src, tgt, beams))
+
+    def paragraph(self, text: str, src: str, tgt: str, beams: int = 4) -> str:
+        return " ".join(t for _, t in self.paragraph_pairs(text, src, tgt, beams))
+
+    # -- any text: paragraphs, line structure kept; `pairs` (a list) receives the segment pairs of every paragraph
+    def text(self, text: str, src: str, tgt: str, beams: int = 4, progress=None, pairs: list | None = None) -> str:
         blocks = re.split(r"(\n+)", text.replace("\r\n", "\n"))
         paras = [i for i, b in enumerate(blocks) if b.strip() and not b.startswith("\n")]
         out = list(blocks)
         for n, i in enumerate(paras):
             lead = blocks[i][: len(blocks[i]) - len(blocks[i].lstrip())]
-            out[i] = lead + self.paragraph(blocks[i].strip(), src, tgt, beams)
+            pp = self.paragraph_pairs(blocks[i].strip(), src, tgt, beams)
+            out[i] = lead + " ".join(t for _, t in pp)
+            if pairs is not None:
+                pairs.append(pp)
             if progress:
                 progress(n + 1, len(paras), "".join(out[: i + 1]))
         return "".join(out)
@@ -101,7 +153,8 @@ class Jobs:
         jid = uuid.uuid4().hex[:12]
         paras = sum(1 for b in re.split(r"\n+", text) if b.strip())
         job = {"id": jid, "state": "queued", "done": 0, "total": paras, "partial": "", "result": None,
-               "error": None, "src": src, "tgt": tgt, "name": name, "started": time.time(), "seconds": None}
+               "error": None, "src": src, "tgt": tgt, "name": name, "started": time.time(), "seconds": None,
+               "original": text, "pairs": []}
         self.jobs[jid] = job
 
         def progress(done, total, partial):
@@ -111,7 +164,7 @@ class Jobs:
             with self.run_lock:
                 job["state"] = "running"
                 try:
-                    job["result"] = self.tr.text(text, src, tgt, beams, progress)
+                    job["result"] = self.tr.text(text, src, tgt, beams, progress, pairs=job["pairs"])
                     job["state"] = "done"
                 except Exception as e:  # reported to the page, the server keeps running
                     job["state"], job["error"] = "error", str(e)

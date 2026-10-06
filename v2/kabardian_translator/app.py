@@ -89,7 +89,6 @@ def api_document():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     jid = jobs.start(text, src, tgt, beams=1 if request.form.get("fast") == "1" else 4, name=f.filename)
-    jobs.get(jid)["original"] = text
     return jsonify({"job": jid, "chars": len(text), "text": text if len(text) <= 2_000_000 else text[:2_000_000]})
 
 
@@ -107,11 +106,17 @@ def api_download(jid):
     if not j or j["state"] != "done":
         return jsonify({"error": "not ready"}), 404
     fmt = request.args.get("format", "txt")
-    both = request.args.get("both") == "1"
-    original = j.get("original") or request.args.get("original")
-    data = documents.write(j["result"], fmt, original if both else None, title=Path(j["name"]).stem if j.get("name") else None)
+    fmt = fmt if fmt in ("txt", "docx") else "txt"
+    both = request.args.get("mode") == "bilingual"
+    ui = request.args.get("ui", "en")
+    title = Path(j["name"]).stem if j.get("name") else None
+    if both:
+        data = documents.write_bilingual(j["pairs"], languages.name(j["src"], ui), languages.name(j["tgt"], ui),
+                                         j["src"], j["tgt"], fmt, title)
+    else:
+        data = documents.write(j["result"], fmt, title=title)
     stem = Path(j.get("name") or "translation").stem
-    name = f"{stem}.{j['tgt']}{'.bilingual' if both else ''}.{fmt}"
+    name = f"{stem}.{j['src']}-{j['tgt']}.{fmt}" if both else f"{stem}.{j['tgt']}.{fmt}"
     mime = "text/plain" if fmt == "txt" else \
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     return send_file(io.BytesIO(data), mimetype=mime, as_attachment=True, download_name=name)
@@ -122,23 +127,9 @@ def api_voices():
     return jsonify({"voices": speech.options(request.args.get("lang", "ru"))})
 
 
-@app.post("/api/speak")
-def api_speak():
-    d = request.get_json(force=True)
-    text, lang = (d.get("text") or "").strip(), d.get("lang", "ru")
-    if not text:
-        return jsonify({"error": "empty"}), 400
-    try:
-        samples, rate = speech.synthesize(text, lang, d.get("voice") or None, float(d.get("speed", 1.0)))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    return send_file(io.BytesIO(Speech.wav_bytes(samples, rate)), mimetype="audio/wav",
-                     as_attachment=bool(d.get("download")), download_name=f"speech.{lang}.wav")
-
-
 @app.post("/api/speak_marked")
 def api_speak_marked():
-    """One paragraph → its audio (by URL) and the sentence/word timings for highlighting."""
+    """One reading unit (a paragraph or a few sentences) → its audio (by URL) and the sentence/word timings for highlighting."""
     import uuid
     d = request.get_json(force=True)
     text, lang = d.get("text") or "", d.get("lang", "ru")
