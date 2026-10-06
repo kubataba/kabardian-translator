@@ -5,12 +5,17 @@
   → length regulation (rows repeated by duration, the two streams summed) → mel_decoder → vocoder
   → spectrum mag·(x + iy) → inverse STFT (n_fft 2400, hop 600, Hann, centered) → 48 kHz.
 
-Georgian and Armenian are read by the Kabardian voice after the v1 transliteration (as in v1).
+Every language offers all the speakers the model has for it (names and sex from the app's markup,
+data/silero-voices.json); the first is the default. Georgian and Armenian are read by default by the Kabardian voice
+after the v1 transliteration (as in v1); Georgian also by Vika and Armenian by Zara, through the app's own tables
+(`SileroTransliterator`: Georgian → Russian Cyrillic, Armenian → Cyrillic with the ու digraph).
 """
 from __future__ import annotations
 
+import json
 import re
 import threading
+from importlib import resources
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +36,7 @@ ALPHABETS = {
     "tat": "абвгдежзийклмнопрстуфхцчшъыьэюяҗңүһәө", "bel": "абвгдежзйклмнопрстуфхцчшыьэюяёіў",
     "tgk": "абвгдежзийклмнопрстуфхчшъэюяёғқҳҷӣӯ", "kir": "абвгдежзийклмнопрстуфхцчшыьэюяёңүө",
     "kbd": "абвгдежзийклмнопрстуфхцчшщъыьэюяӏ", "hye": "абвгдежзийклмнопрстуфхцчшщъыьэюя",
+    "kat": "абвгдежзийклмнопрстуфхцчшщъыьэюя",
 }
 EXTRA = set("!'+,-.:;?h —…")
 AZE_LATIN = [("ch", "ч"), ("sh", "ш"), ("zh", "ж"), ("a", "а"), ("b", "б"), ("c", "ҹ"), ("ç", "ч"), ("d", "д"),
@@ -62,6 +68,48 @@ VOICES = {
     "tg": ("tgk_onaoy", None), "hy": ("kbd_eduard", None), "ka": ("kbd_eduard", None),
 }
 # The model is the no-stress v5: «+» marks are needed only for Russian, Ukrainian and Belarusian (curator, 06.10).
+
+# The speakers of a language: the default above first, then every speaker the model has for that language.
+_PREFIX = {"ru": "ru", "uk": "ukr", "be": "bel", "kk": "kaz", "ky": "kir", "tt": "tat", "ba": "bak", "uz": "uzb",
+           "az": "aze", "tg": "tgk", "kbd": "kbd"}
+_EXTRA = {"hy": ["hye_zara"], "ka": ["kat_vika"]}
+VOICE_NAMES = json.loads(resources.files("kabardian_translator").joinpath("data/silero-voices.json").read_text("utf-8"))
+
+
+def speakers(lang: str) -> list:
+    """All speakers for a language, the default first, then by name."""
+    if lang not in VOICES:
+        return []
+    default = VOICES[lang][0]
+    pre = _PREFIX.get(lang)
+    rest = [s for s in SPEAKERS if pre and s.split("_")[0] == pre and s != default] + _EXTRA.get(lang, [])
+    return [default] + sorted(rest, key=lambda s: VOICE_NAMES.get(s, {}).get("name", s))
+
+
+# The app's tables for the Georgian and Armenian speakers (SileroTransliterator.swift: katMap, hyeMap).
+KAT_MAP = {"ა": "а", "ბ": "б", "გ": "г", "დ": "д", "ე": "э", "ვ": "в", "ზ": "з", "თ": "т", "ი": "и", "კ": "к",
+           "ლ": "л", "მ": "м", "ნ": "н", "ო": "о", "პ": "п", "ჟ": "ж", "რ": "р", "ს": "с", "ტ": "т", "უ": "у",
+           "ფ": "п", "ქ": "к", "ღ": "г", "ყ": "к", "შ": "ш", "ჩ": "ч", "ც": "ц", "ძ": "дз", "წ": "ц", "ჭ": "ч",
+           "ხ": "х", "ჯ": "дж", "ჰ": "х", "ჱ": "э", "ჲ": "й", "ჳ": "уи", "ჴ": "х", "ჵ": "о", "ჶ": "ф", "ჷ": "ы",
+           "ჸ": "", "ჹ": "г", "ჺ": "л"}
+HYE_MAP = {"ա": "а", "բ": "б", "գ": "г", "դ": "д", "ե": "е", "զ": "з", "է": "э", "ը": "ы", "թ": "т", "ժ": "ж",
+           "ի": "и", "լ": "л", "խ": "х", "ծ": "ц", "կ": "к", "հ": "х", "ձ": "дз", "ղ": "г", "ճ": "ч", "մ": "м",
+           "յ": "й", "ն": "н", "շ": "ш", "ո": "во", "չ": "ч", "պ": "п", "ջ": "дж", "ռ": "р", "ս": "с", "վ": "в",
+           "տ": "т", "ր": "р", "ց": "ц", "ւ": "у", "փ": "п", "ք": "к", "օ": "о", "ֆ": "ф", "և": "эв"}
+
+
+def _script_text(text: str, lang: str, speaker: str) -> str:
+    """Georgian or Armenian text for a Cyrillic speaker."""
+    if lang not in ("ka", "hy"):
+        return text
+    pre = speaker.split("_")[0]
+    if pre == "kat":
+        return "".join(KAT_MAP.get(c, c) for c in text.lower())
+    if pre == "hye":
+        t = text.lower().replace("ու", "у")
+        return "".join(HYE_MAP.get(c, c) for c in t)
+    from .transliterator import transliterator
+    return transliterator.transliterate_for_tts(text, {"ka": "kat_Geor", "hy": "hye_Armn"}[lang])
 
 
 def _replace_all(text, rules):
@@ -187,11 +235,10 @@ class Silero:
         mag, xr, yi = (a.reshape(BINS, -1) for a in (mag, xr, yi))
         return istft(mag * (xr + 1j * yi)), dur
 
-    def synthesize(self, text: str, lang: str, speed: float = 1.0) -> np.ndarray:
-        speaker, accent = VOICES[lang]
-        if lang in ("ka", "hy"):
-            from .transliterator import transliterator
-            text = transliterator.transliterate_for_tts(text, {"ka": "kat_Geor", "hy": "hye_Armn"}[lang])
+    def synthesize(self, text: str, lang: str, speed: float = 1.0, speaker: str | None = None) -> np.ndarray:
+        default, accent = VOICES[lang]
+        speaker = speaker if speaker in speakers(lang) else default
+        text = _script_text(text, lang, speaker)
         out = []
         with self.lock:
             for piece in split_for_decoder(text, int(MAX_CHARS / max(1.0, 1.0 / speed))):
@@ -203,16 +250,17 @@ class Silero:
                     out.append(np.zeros(int(0.15 * SAMPLE_RATE), np.float32))
         return np.concatenate(out) if out else np.zeros(int(0.35 * SAMPLE_RATE), np.float32)
 
-    def synthesize_marked(self, sentence: str, lang: str, speed: float = 1.0):
+    def synthesize_marked(self, sentence: str, lang: str, speed: float = 1.0, speaker: str | None = None):
         """One sentence → (samples, words), words = [(char_start, char_end, t0, t1)] relative to the sentence.
 
         Word times come from the model's own durations: every token (a letter, a space, a mark) has a number of mel
         frames, so a word lasts from its first letter's frame to its last. Words are matched to the sentence in
         order; a word that has no letters for the voice (digits, Latin for a Cyrillic voice) gets no time of its own.
         """
-        speaker, accent = VOICES[lang]
+        default, accent = VOICES[lang]
+        speaker = speaker if speaker in speakers(lang) else default
         if lang in ("ka", "hy"):                       # transliterated: the sentence is still timed, words are not
-            return self.synthesize(sentence, lang, speed), []
+            return self.synthesize(sentence, lang, speed, speaker), []
         lang_code = speaker.split("_")[0]
         letters = set(ALPHABETS.get(lang_code, ""))
         space_id = SYMBOL_ID[" "]

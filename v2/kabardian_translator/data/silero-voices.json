@@ -1,0 +1,362 @@
+{
+"aze_gamat": {
+"age": "adult",
+"character": "neutral",
+"name": "Gamat",
+"sex": "M"
+},
+"bak_aigul": {
+"age": "adult",
+"character": "neutral",
+"name": "Aigul",
+"sex": "F"
+},
+"bak_alfia": {
+"age": "adult",
+"character": "neutral",
+"name": "Alfia",
+"sex": "F"
+},
+"bak_alfia2": {
+"age": "adult",
+"character": "rough",
+"name": "Alfia 2",
+"sex": "F"
+},
+"bak_miyau": {
+"age": "adult",
+"character": "neutral",
+"name": "Miyau",
+"sex": "M"
+},
+"bak_ramilia": {
+"age": "adult",
+"character": "rough",
+"name": "Ramilia",
+"sex": "F"
+},
+"bel_anatoliy": {
+"age": "adult",
+"character": "neutral",
+"name": "Anatoliy",
+"sex": "M"
+},
+"bel_dmitriy": {
+"age": "adult",
+"character": "rough",
+"name": "Dmitriy",
+"sex": "M"
+},
+"bel_larisa": {
+"age": "adult",
+"character": "neutral",
+"name": "Larisa",
+"sex": "F"
+},
+"chv_ekaterina": {
+"age": "young",
+"character": "neutral",
+"name": "Ekaterina",
+"sex": "F"
+},
+"erz_alexandr": {
+"age": "adult",
+"character": "neutral",
+"name": "Alexandr",
+"sex": "M"
+},
+"hye_zara": {
+"age": "adult",
+"character": "neutral",
+"name": "Zara",
+"sex": "F"
+},
+"kat_vika": {
+"age": "adult",
+"character": "neutral",
+"name": "Vika",
+"sex": "F"
+},
+"kaz_zhadyra": {
+"age": "adult",
+"character": "neutral",
+"name": "Zhadyra",
+"sex": "F"
+},
+"kaz_zhazira": {
+"age": "adult",
+"character": "neutral",
+"name": "Zhazira",
+"sex": "F"
+},
+"kbd_eduard": {
+"age": "adult",
+"character": "soft",
+"name": "Eduard",
+"sex": "M"
+},
+"kir_nurgul": {
+"age": "adult",
+"character": "rough",
+"name": "Nurgul",
+"sex": "F"
+},
+"kjh_karina": {
+"age": "young",
+"character": "neutral",
+"name": "Karina",
+"sex": "F"
+},
+"kjh_sibday": {
+"age": "adult",
+"character": "neutral",
+"name": "Sibday",
+"sex": "M"
+},
+"mdf_oksana": {
+"age": "adult",
+"character": "soft",
+"name": "Oksana",
+"sex": "F"
+},
+"ru_aigul": {
+"age": "adult",
+"character": "neutral",
+"name": "Aigul",
+"sex": "F"
+},
+"ru_albina": {
+"age": "adult",
+"character": "soft",
+"name": "Albina",
+"sex": "F"
+},
+"ru_alexandr": {
+"age": "adult",
+"character": "neutral",
+"name": "Alexandr",
+"sex": "M"
+},
+"ru_alfia": {
+"age": "adult",
+"character": "neutral",
+"name": "Alfia",
+"sex": "F"
+},
+"ru_alfia2": {
+"age": "adult",
+"character": "rough",
+"name": "Alfia 2",
+"sex": "F"
+},
+"ru_bogdan": {
+"age": "adult",
+"character": "neutral",
+"name": "Bogdan",
+"sex": "M"
+},
+"ru_dmitriy": {
+"age": "adult",
+"character": "rough",
+"name": "Dmitriy",
+"sex": "M"
+},
+"ru_eduard": {
+"age": "adult",
+"character": "soft",
+"name": "Eduard",
+"sex": "M"
+},
+"ru_ekaterina": {
+"age": "young",
+"character": "neutral",
+"name": "Ekaterina",
+"sex": "F"
+},
+"ru_gamat": {
+"age": "adult",
+"character": "neutral",
+"name": "Gamat",
+"sex": "M"
+},
+"ru_igor": {
+"age": "adult",
+"character": "rough",
+"name": "Igor",
+"sex": "M"
+},
+"ru_karina": {
+"age": "young",
+"character": "neutral",
+"name": "Karina",
+"sex": "F"
+},
+"ru_kejilgan": {
+"age": "adult",
+"character": "rough",
+"name": "Kejilgan",
+"sex": "M"
+},
+"ru_kermen": {
+"age": "young",
+"character": "neutral",
+"name": "Kermen",
+"sex": "F"
+},
+"ru_marat": {
+"age": "adult",
+"character": "neutral",
+"name": "Marat",
+"sex": "M"
+},
+"ru_miyau": {
+"age": "adult",
+"character": "neutral",
+"name": "Miyau",
+"sex": "M"
+},
+"ru_nurgul": {
+"age": "adult",
+"character": "rough",
+"name": "Nurgul",
+"sex": "F"
+},
+"ru_oksana": {
+"age": "adult",
+"character": "soft",
+"name": "Oksana",
+"sex": "F"
+},
+"ru_onaoy": {
+"age": "adult",
+"character": "rough",
+"name": "Onaoy",
+"sex": "F"
+},
+"ru_ramilia": {
+"age": "adult",
+"character": "rough",
+"name": "Ramilia",
+"sex": "F"
+},
+"ru_roman": {
+"age": "adult",
+"character": "soft",
+"name": "Roman",
+"sex": "M"
+},
+"ru_safarhuja": {
+"age": "adult",
+"character": "neutral",
+"name": "Safarhuja",
+"sex": "M"
+},
+"ru_saida": {
+"age": "adult",
+"character": "soft",
+"name": "Saida",
+"sex": "F"
+},
+"ru_sibday": {
+"age": "adult",
+"character": "neutral",
+"name": "Sibday",
+"sex": "M"
+},
+"ru_vika": {
+"age": "adult",
+"character": "neutral",
+"name": "Vika",
+"sex": "F"
+},
+"ru_zara": {
+"age": "adult",
+"character": "neutral",
+"name": "Zara",
+"sex": "F"
+},
+"ru_zhadyra": {
+"age": "adult",
+"character": "neutral",
+"name": "Zhadyra",
+"sex": "F"
+},
+"ru_zhazira": {
+"age": "adult",
+"character": "neutral",
+"name": "Zhazira",
+"sex": "F"
+},
+"ru_zinaida": {
+"age": "adult",
+"character": "soft",
+"name": "Zinaida",
+"sex": "F"
+},
+"sah_zinaida": {
+"age": "adult",
+"character": "soft",
+"name": "Zinaida",
+"sex": "F"
+},
+"tat_albina": {
+"age": "adult",
+"character": "soft",
+"name": "Albina",
+"sex": "F"
+},
+"tat_marat": {
+"age": "adult",
+"character": "neutral",
+"name": "Marat",
+"sex": "M"
+},
+"tgk_onaoy": {
+"age": "adult",
+"character": "rough",
+"name": "Onaoy",
+"sex": "F"
+},
+"tgk_safarhuja": {
+"age": "adult",
+"character": "neutral",
+"name": "Safarhuja",
+"sex": "M"
+},
+"udm_bogdan": {
+"age": "adult",
+"character": "neutral",
+"name": "Bogdan",
+"sex": "M"
+},
+"ukr_igor": {
+"age": "adult",
+"character": "rough",
+"name": "Igor",
+"sex": "M"
+},
+"ukr_roman": {
+"age": "adult",
+"character": "soft",
+"name": "Roman",
+"sex": "M"
+},
+"uzb_saida": {
+"age": "adult",
+"character": "soft",
+"name": "Saida",
+"sex": "F"
+},
+"xal_kejilgan": {
+"age": "adult",
+"character": "rough",
+"name": "Kejilgan",
+"sex": "M"
+},
+"xal_kermen": {
+"age": "young",
+"character": "neutral",
+"name": "Kermen",
+"sex": "F"
+}
+}

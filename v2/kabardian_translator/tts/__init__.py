@@ -58,7 +58,11 @@ class Speech:
         out = []
         engine, voice = languages.SPEECH.get(lang, (None, None))
         if engine == "silero" and models.installed("silero"):
-            out.append({"id": "silero", "label": f"Silero · {languages.name(lang)}", "engine": "silero"})
+            from .silero import VOICE_NAMES, speakers
+            for spk in speakers(lang):
+                info = VOICE_NAMES.get(spk, {})
+                out.append({"id": f"silero:{spk}", "engine": "silero",
+                            "label": f"Silero · {info.get('name', spk)} ({info.get('sex', '?')})"})
         if engine == "baltic" and models.installed("baltic"):
             try:
                 for v in self.baltic.voice_list(lang):
@@ -83,8 +87,8 @@ class Speech:
         if not opts:
             raise RuntimeError(f"no voice for {lang!r}")
         voice = voice or opts[0]["id"]
-        if voice == "silero":
-            return self.silero.synthesize(text, lang, speed), 48000
+        if voice == "silero" or voice.startswith("silero:"):
+            return self.silero.synthesize(text, lang, speed, voice.partition(":")[2] or None), 48000
         if voice.startswith("baltic:"):
             return self.baltic.synthesize(text, lang, voice.split(":", 1)[1], speed), 22050
         if voice.startswith("apple:"):
@@ -105,14 +109,15 @@ class Speech:
         if not opts:
             raise RuntimeError(f"no voice for {lang!r}")
         voice = voice or opts[0]["id"]
-        rate = 48000 if voice == "silero" else 22050 if voice.startswith(("baltic:", "apple:")) else None
+        silero = voice == "silero" or voice.startswith("silero:")
+        rate = 48000 if silero else 22050 if voice.startswith(("baltic:", "apple:")) else None
         chunks, sentences, words, t, pos = [], [], [], 0.0, 0
         for sent in split_sentences(text):
             start = text.find(sent, pos)
             start = pos if start < 0 else start
             pos = start + len(sent)
-            if voice == "silero":
-                y, w = self.silero.synthesize_marked(sent, lang, speed)
+            if silero:
+                y, w = self.silero.synthesize_marked(sent, lang, speed, voice.partition(":")[2] or None)
                 words += [{"start": start + a, "end": start + b, "t0": round(float(t + t0), 3), "t1": round(float(t + t1), 3)}
                           for a, b, t0, t1 in w]
             else:
