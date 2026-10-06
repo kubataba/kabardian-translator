@@ -8,7 +8,7 @@ runs on your computer — no text leaves it.
 | Russian ↔ Kabardian | our model | our model |
 | every other pair | **MADLAD-400 3B** on the Neural Engine, 37 languages — or SMaLL-100 by choice | **SMaLL-100**, 30 languages |
 | speech | Silero, our Baltic model, Apple voices | Silero, our Baltic model; on Windows the Windows voices |
-| models on disk | ≈ 1.7 GB | ≈ 0.8 GB |
+| models on disk | ≈ 1.7 GB with MADLAD, ≈ 0.8 GB with SMaLL-100 | ≈ 0.8 GB |
 
 - **Russian ↔ Kabardian** — our own model ([kubataba/ru-kbd-bidirectional](https://huggingface.co/kubataba/ru-kbd-bidirectional),
   MarianMT 61M, int8 ONNX): FLORES-200 chrF **ru→kbd 57.4, kbd→ru 50.2**, with the rules of the SayFable app —
