@@ -12,6 +12,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python: ["3.11", "3.14"]
+        include:
+          # a Mac with Python 3.14: coremltools has no native build for it, so SMaLL-100 must take over from MADLAD
+          - os: macos-latest
+            python: "3.14"
     runs-on: ${{ matrix.os }}
     env:
       PYTHONIOENCODING: utf-8

@@ -34,7 +34,8 @@ def api_languages():
         r["voices"] = [o["engine"] for o in speech.options(r["code"])][:1]
     groups = {g: dict(zip(("ru", "en", "lv"), names)).get(ui) for g, names in languages.GROUPS.items()}
     return jsonify({"languages": rows, "groups": groups, "engine": languages.engine_name(),
-                    "engine_key": system.translator(), "can_choose": system.can_choose()})
+                    "engine_key": system.translator(), "can_choose": system.can_choose(),
+                    "madlad_python": system.madlad_blocked_by_python()})
 
 
 switching = {}                                                  # the translator switch in progress: state, log

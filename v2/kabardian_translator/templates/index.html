@@ -176,7 +176,7 @@ const T = {
   listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",theme_light:"Светлая тема",engine_title:"Переводчик для остальных языков",
   to_small:"Перейти на SMaLL-100? Он скачается (289 МБ), а MADLAD-400 будет удалён с диска (1.3 ГБ). SMaLL-100 в 10 раз быстрее и легче, но переводит хуже (в среднем на 7–8 chrF) и знает 30 языков вместо 37: нет киргизского, татарского, таджикского, башкирского, узбекского, каталанского, норвежского. Вернуться можно в любой момент — MADLAD скачается заново.",
   to_madlad:"Вернуться на MADLAD-400? Он скачается (1.3 ГБ, первый запуск — около 2 минут на подготовку модели), а SMaLL-100 будет удалён с диска.",
-  switching:"переключение переводчика: {x}",switched:"переводчик: {x}",busy:"Дождитесь окончания перевода.",theme_dark:"Тёмная тема",save:"Сохранить…",save_trans:"Только перевод",save_both:"Оригинал и перевод по предложениям",fast:"быстрый кабардинский (жадный поиск)",
+  switching:"переключение переводчика: {x}",madlad_py:"MADLAD-400 на Mac работает с Python 3.11–3.13 (у coremltools ещё нет сборки для 3.14)",switched:"переводчик: {x}",busy:"Дождитесь окончания перевода.",theme_dark:"Тёмная тема",save:"Сохранить…",save_trans:"Только перевод",save_both:"Оригинал и перевод по предложениям",fast:"быстрый кабардинский (жадный поиск)",
   speed:"темп",doc_title:"Документ",doc_hint:".txt, .md или .docx любого размера: перевод идёт по абзацам, результат можно скачать.",
   doc_pick:"Выбрать файл…",placeholder:"Введите или вставьте текст любой длины — или перетащите сюда файл .txt, .md, .docx…",result:"Здесь появится перевод",
   chars:"знаков",progress:"абзац {d} из {t}",done:"готово за {s} с",working:"переводится…",loading:"первый запуск: модель загружается (до 1–2 минут)…",
@@ -203,7 +203,7 @@ const T = {
   listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",theme_light:"Light theme",engine_title:"Translator for the other languages",
   to_small:"Switch to SMaLL-100? It will be downloaded (289 MB) and MADLAD-400 removed from disk (1.3 GB). SMaLL-100 is ten times faster and lighter, but translates worse (7–8 chrF on average) and knows 30 languages instead of 37: no Kyrgyz, Tatar, Tajik, Bashkir, Uzbek, Catalan, Norwegian. You can switch back at any time — MADLAD will be downloaded again.",
   to_madlad:"Switch back to MADLAD-400? It will be downloaded (1.3 GB; the first start prepares the model for about 2 minutes) and SMaLL-100 removed from disk.",
-  switching:"switching the translator: {x}",switched:"translator: {x}",busy:"Wait for the translation to finish.",theme_dark:"Dark theme",save:"Save…",save_trans:"Translation only",save_both:"Original and translation, sentence by sentence",fast:"fast Kabardian (greedy search)",
+  switching:"switching the translator: {x}",madlad_py:"MADLAD-400 on a Mac needs Python 3.11–3.13 (coremltools has no build for 3.14 yet)",switched:"translator: {x}",busy:"Wait for the translation to finish.",theme_dark:"Dark theme",save:"Save…",save_trans:"Translation only",save_both:"Original and translation, sentence by sentence",fast:"fast Kabardian (greedy search)",
   speed:"pace",doc_title:"Document",doc_hint:".txt, .md or .docx of any size: translated paragraph by paragraph, ready to download.",
   doc_pick:"Choose a file…",placeholder:"Type or paste text of any length — or drop a .txt, .md or .docx file here…",result:"The translation appears here",
   chars:"characters",progress:"paragraph {d} of {t}",done:"done in {s} s",working:"translating…",loading:"first run: loading the model (up to 1–2 minutes)…",
@@ -230,7 +230,7 @@ const T = {
   listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",theme_light:"Gaišā tēma",engine_title:"Tulkotājs pārējām valodām",
   to_small:"Pāriet uz SMaLL-100? Tas tiks lejupielādēts (289 MB), un MADLAD-400 tiks izdzēsts no diska (1,3 GB). SMaLL-100 ir desmit reizes ātrāks un vieglāks, bet tulko sliktāk (vidēji par 7–8 chrF) un zina 30 valodas 37 vietā: nav kirgīzu, tatāru, tadžiku, baškīru, uzbeku, katalāņu, norvēģu. Atgriezties var jebkurā brīdī — MADLAD tiks lejupielādēts no jauna.",
   to_madlad:"Atgriezties pie MADLAD-400? Tas tiks lejupielādēts (1,3 GB; pirmā palaišana sagatavo modeli apmēram 2 minūtes), un SMaLL-100 tiks izdzēsts no diska.",
-  switching:"tulkotāja pārslēgšana: {x}",switched:"tulkotājs: {x}",busy:"Pagaidiet, līdz tulkošana beidzas.",theme_dark:"Tumšā tēma",save:"Saglabāt…",save_trans:"Tikai tulkojums",save_both:"Oriģināls un tulkojums pa teikumiem",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
+  switching:"tulkotāja pārslēgšana: {x}",madlad_py:"MADLAD-400 Mac datorā darbojas ar Python 3.11–3.13 (coremltools vēl nav versijas 3.14)",switched:"tulkotājs: {x}",busy:"Pagaidiet, līdz tulkošana beidzas.",theme_dark:"Tumšā tēma",save:"Saglabāt…",save_trans:"Tikai tulkojums",save_both:"Oriģināls un tulkojums pa teikumiem",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
   speed:"temps",doc_title:"Dokuments",doc_hint:".txt, .md vai .docx jebkurā apjomā: tulko pa rindkopām, rezultātu var lejupielādēt.",
   doc_pick:"Izvēlēties failu…",placeholder:"Ievadiet vai ielīmējiet jebkura garuma tekstu — vai ievelciet šeit .txt, .md, .docx failu…",result:"Šeit parādīsies tulkojums",
   chars:"zīmes",progress:"rindkopa {d} no {t}",done:"gatavs {s} s",working:"tulko…",loading:"pirmā palaišana: ielādē modeli (līdz 1–2 minūtēm)…",
@@ -257,7 +257,7 @@ const T = {
 const $ = s => document.querySelector(s);
 const store = {get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let ui = store.get("ui", (navigator.language||"en").slice(0,2)); if(!T[ui]) ui = "en";
-let ENGINE = "MADLAD-400", ENGINE_KEY = "madlad", CAN_CHOOSE = false, SWITCHING = false, LANGS = [], GROUPS = {}, job = null, lastResult = "", lastOriginal = "", timer = null;
+let ENGINE = "MADLAD-400", ENGINE_KEY = "madlad", CAN_CHOOSE = false, MADLAD_PY = false, SWITCHING = false, LANGS = [], GROUPS = {}, job = null, lastResult = "", lastOriginal = "", timer = null;
 const t = (k, v={}) => (T[ui][k]||T.en[k]||k).replace(/\{(\w)\}/g, (_,x)=>v[x]??"");
 
 function applyUI(){
@@ -289,7 +289,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 
 async function loadLanguages(){
   const r = await fetch(`/api/languages?ui=${ui}`).then(r => r.json());
-  LANGS = r.languages; GROUPS = r.groups; ENGINE = r.engine || "MADLAD-400"; ENGINE_KEY = r.engine_key; CAN_CHOOSE = r.can_choose;
+  LANGS = r.languages; GROUPS = r.groups; ENGINE = r.engine || "MADLAD-400"; ENGINE_KEY = r.engine_key; CAN_CHOOSE = r.can_choose; MADLAD_PY = !!r.madlad_python;
   const has = c => LANGS.some(l => l.code === c);
   let keepS = $("#src").value || store.get("src","ru"), keepT = $("#tgt").value || store.get("tgt","kbd");
   if (!has(keepS)) keepS = keepT === "ru" ? "kbd" : "ru";
@@ -338,7 +338,11 @@ function showRoute(){
 // the translator for the pairs without Kabardian: a switch on a Mac with Apple Silicon, a plain name elsewhere
 function renderEngine(){
   const box = $("#engine");
-  if (!CAN_CHOOSE) { box.innerHTML = `<span class="fixed" title="${t("engine_title")}">${ENGINE}</span>`; return; }
+  if (!CAN_CHOOSE) {
+    const why = MADLAD_PY ? t("madlad_py") : t("engine_title");
+    box.innerHTML = `<span class="fixed" title="${why}">${ENGINE}${MADLAD_PY ? " ⓘ" : ""}</span>`;
+    return;
+  }
   box.innerHTML = `<span class="seg" title="${t("engine_title")}"><button data-e="madlad">MADLAD-400</button><button data-e="small100">SMaLL-100</button></span>`;
   box.querySelectorAll("button").forEach(b => {
     b.classList.toggle("on", b.dataset.e === ENGINE_KEY);

@@ -41,8 +41,9 @@ On the first start the models this system uses are downloaded in the background 
 page) — whatever is ready can be used at once. To download them beforehand: `kabardian-download-models all`; to start
 without downloading: `kabardian-translator --no-download`.
 
-Requirements: Python 3.11+. On a Mac with Apple Silicon (macOS 13+) about 3 GB of free memory while MADLAD is
-loaded; its first start compiles the model for the Neural Engine (about two minutes), later starts are fast. On
+Requirements: Python 3.11+. MADLAD on a Mac needs Python 3.11–3.13: coremltools has no build for 3.14 yet, and with
+Python 3.14 a Mac uses SMaLL-100 like Windows and Linux. On a Mac with Apple Silicon (macOS 13+) about 3 GB of free
+memory while MADLAD is loaded; its first start compiles the model for the Neural Engine (about two minutes), later starts are fast. On
 Windows and Linux about 1.5 GB of free memory.
 
 **MADLAD or SMaLL-100 on a Mac.** The engine name next to the language selectors is a switch. SMaLL-100 is for a
