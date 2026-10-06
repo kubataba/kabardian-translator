@@ -107,7 +107,7 @@ SPEECH = {
     "uk": ("silero", "ukr_igor"), "be": ("silero", "bel_anatoliy"),
     "kk": ("silero", "kz_M1"), "ky": ("silero", "kgz_nurgul"), "tt": ("silero", "tat_albina"),
     "ba": ("silero", "bak_aigul"), "uz": ("silero", "uzb_saida"), "az": ("silero", "aze_gamat"),
-    "tg": ("silero", "tgk_onaxon"), "hy": ("silero", "hye_zara"), "ka": ("silero", "kbd_eduard"),
+    "tg": ("silero", "tgk_onaxon"), "hy": ("silero", "hye_zara"), "ka": ("silero", "kat_vika"),
     "lv": ("baltic", "lv"), "lt": ("baltic", "lt"), "et": ("baltic", "et"),
 }
 APPLE_LOCALES = {

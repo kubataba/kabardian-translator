@@ -6,9 +6,9 @@
   → spectrum mag·(x + iy) → inverse STFT (n_fft 2400, hop 600, Hann, centered) → 48 kHz.
 
 Every language offers all the speakers the model has for it (names and sex from the app's markup,
-data/silero-voices.json); the first is the default. Georgian and Armenian are read by default by the Kabardian voice
-after the v1 transliteration (as in v1); Georgian also by Vika and Armenian by Zara, through the app's own tables
-(`SileroTransliterator`: Georgian → Russian Cyrillic, Armenian → Cyrillic with the ու digraph).
+data/silero-voices.json); the first is the default. Georgian is read by Vika and Armenian by Zara (the app's
+catalogue), through the app's own tables (`SileroTransliterator`: Georgian → Russian Cyrillic, Armenian → Cyrillic
+with the ու digraph); the Kabardian voice with the v1 transliteration is the second choice for both.
 """
 from __future__ import annotations
 
@@ -65,14 +65,14 @@ VOICES = {
     "ru": ("ru_eduard", "ru"), "kbd": ("kbd_eduard", None), "uk": ("ukr_igor", "ukr"), "be": ("bel_anatoliy", "bel"),
     "kk": ("kaz_zhadyra", None), "ky": ("kir_nurgul", None), "tt": ("tat_albina", None),
     "ba": ("bak_aigul", None), "uz": ("uzb_saida", None), "az": ("aze_gamat", None),
-    "tg": ("tgk_onaoy", None), "hy": ("kbd_eduard", None), "ka": ("kbd_eduard", None),
+    "tg": ("tgk_onaoy", None), "hy": ("hye_zara", None), "ka": ("kat_vika", None),
 }
 # The model is the no-stress v5: «+» marks are needed only for Russian, Ukrainian and Belarusian (curator, 06.10).
 
 # The speakers of a language: the default above first, then every speaker the model has for that language.
 _PREFIX = {"ru": "ru", "uk": "ukr", "be": "bel", "kk": "kaz", "ky": "kir", "tt": "tat", "ba": "bak", "uz": "uzb",
            "az": "aze", "tg": "tgk", "kbd": "kbd"}
-_EXTRA = {"hy": ["hye_zara"], "ka": ["kat_vika"]}
+_EXTRA = {"hy": ["kbd_eduard"], "ka": ["kbd_eduard"]}
 VOICE_NAMES = json.loads(resources.files("kabardian_translator").joinpath("data/silero-voices.json").read_text("utf-8"))
 
 

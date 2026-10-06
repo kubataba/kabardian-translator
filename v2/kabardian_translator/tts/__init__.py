@@ -1,7 +1,7 @@
 """Speech: which engine reads which language, and one entry point that returns a WAV file.
 
 Silero v5 (Russian, Kabardian, Ukrainian, Belarusian, Kazakh, Kyrgyz, Tatar, Bashkir, Uzbek, Azerbaijani, Tajik;
-Georgian and Armenian through the Kabardian voice) and the Baltic Piper model (Latvian, Lithuanian, Estonian) on every
+Georgian — Vika, Armenian — Zara, both also by the Kabardian voice) and the Baltic Piper model (Latvian, Lithuanian, Estonian) on every
 system; the system's own voices for everything else — and as an alternative wherever one is installed: Apple voices
 on macOS, Windows voices (OneCore and SAPI) on Windows. Linux has no system voices worth using.
 """

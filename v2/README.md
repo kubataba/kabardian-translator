@@ -18,7 +18,7 @@ runs on your computer — no text leaves it.
   little weaker (5–10 chrF), no Kyrgyz, Tatar, Tajik, Bashkir, Uzbek, Catalan or Norwegian. Kabardian with any
   language other than Russian goes through Russian automatically.
 - **Speech** — **Silero v5** on ONNX (Kabardian, Russian, Ukrainian, Belarusian, Kazakh, Kyrgyz, Tatar, Bashkir,
-  Uzbek, Azerbaijani, Tajik; Georgian and Armenian through the Kabardian voice, or Vika and Zara) with every speaker
+  Uzbek, Azerbaijani, Tajik, Georgian — Vika, Armenian — Zara, both also through the Kabardian voice) with every speaker
   the model has for the language — 29 Russian voices, 5 Bashkir, 3 Belarusian, 2 for several others — **our Baltic model** (Latvian,
   Lithuanian, Estonian — 18 voices) on every system, and the system's voices for the rest: the **Apple voices** on a
   Mac, the **Windows voices** (OneCore and SAPI) on Windows. Linux has no system voices worth using, so languages
