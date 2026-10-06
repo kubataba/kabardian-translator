@@ -56,7 +56,8 @@ def api_translator_switch():
         return jsonify({"error": "unknown translator"}), 400
     if switching.get("state") == "running":
         return jsonify({"state": "running"})
-    if any(j["state"] in ("queued", "running") for j in jobs.jobs.values()):
+    if any(i.get("state") in ("queued", "running") for i in installs.values()) or \
+            any(j["state"] in ("queued", "running") for j in jobs.jobs.values()):
         return jsonify({"error": "busy"}), 409
     if engine == system.translator() and models.installed(engine):
         return jsonify({"state": "done"})
@@ -89,17 +90,41 @@ def api_install(key):
         return jsonify({"error": "unknown model"}), 404
     if installs.get(key, {}).get("state") == "running":
         return jsonify({"state": "running"})
-    rec = {"state": "running", "log": []}
-    installs[key] = rec
+    threading.Thread(target=_install_now, args=(key,), daemon=True).start()
+    return jsonify({"state": "running"})
+
+
+_install_lock = threading.Lock()
+AUTO_ORDER = ("kbd", "madlad", "small100", "silero", "baltic")     # translation first, then the voices
+
+
+def _install_now(key: str) -> None:
+    """One package, with its progress in `installs` (the Models tab and the download banner read it)."""
+    with _install_lock:
+        if installs.get(key, {}).get("state") == "running":
+            return
+        rec = {"state": "running", "log": []}
+        installs[key] = rec
+    try:
+        models.install(key, progress=lambda m: rec["log"].append(m))
+        rec["state"] = "done"
+    except Exception as e:
+        rec["state"], rec["error"] = "error", str(e)
+
+
+def auto_install() -> list:
+    """Downloads the missing models of this system one by one in the background; returns their keys."""
+    keys = [k for k in AUTO_ORDER if k in models.available() and not models.installed(k)]
+    for k in keys:
+        installs[k] = {"state": "queued", "log": []}
 
     def run():
-        try:
-            models.install(key, progress=lambda m: rec["log"].append(m))
-            rec["state"] = "done"
-        except Exception as e:
-            rec["state"], rec["error"] = "error", str(e)
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({"state": "running"})
+        for k in keys:
+            if not models.installed(k):
+                _install_now(k)
+    if keys:
+        threading.Thread(target=run, daemon=True).start()
+    return keys
 
 
 @app.post("/api/translate")
@@ -195,9 +220,13 @@ def api_audio(aid):
     return send_file(io.BytesIO(data), mimetype="audio/wav")
 
 
-def run(host="127.0.0.1", port=5500):
+def run(host="127.0.0.1", port=5500, download=True):
     # native libraries are loaded on the main thread, before requests come on worker threads
     import numpy  # noqa: F401
     import onnxruntime  # noqa: F401
     import soundfile  # noqa: F401
+    if download:
+        keys = auto_install()
+        if keys:
+            print(f"downloading the missing models in the background: {', '.join(keys)} — progress on the page")
     app.run(host=host, port=port, debug=False, threaded=True)

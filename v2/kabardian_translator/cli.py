@@ -1,6 +1,8 @@
 """Command-line entry points.
 
-  kabardian-translator [--port 5500] [--no-browser]     the web interface on http://127.0.0.1:5500
+  kabardian-translator [--port 5500] [--no-browser] [--no-download]
+                                                        the web interface on http://127.0.0.1:5500; missing models
+                                                        are downloaded in the background unless --no-download
   kabardian-translate -s ru -t kbd "text"               translate a string
   kabardian-translate -s en -t kbd -i book.docx -o book.kbd.docx [--fast] [--both]
   kabardian-download-models [kbd madlad small100 silero baltic | all]   (all = what this system uses)
@@ -22,17 +24,18 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="kabardian-translator", description=f"Kabardian Translator {__version__}")
     ap.add_argument("--port", type=int, default=5500)
     ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--no-download", action="store_true", help="do not download missing models at start")
     a = ap.parse_args(argv)
     missing = [k for k in models.available() if not models.installed(k)]
     url = f"http://127.0.0.1:{a.port}"
     print(f"Kabardian Translator {__version__} — {url}")
-    if missing:
+    if missing and a.no_download:
         print(f"models not installed yet: {', '.join(missing)} — install them on the Models tab "
               f"or with: kabardian-download-models all")
     if not a.no_browser:
         threading.Timer(1.2, lambda: webbrowser.open(url)).start()
     from .app import run
-    run(port=a.port)
+    run(port=a.port, download=not a.no_download)
 
 
 def translate_cli(argv=None):

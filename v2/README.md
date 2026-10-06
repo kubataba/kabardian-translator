@@ -34,9 +34,12 @@ runs on your computer — no text leaves it.
 
 ```bash
 pip install kabardian-translator
-kabardian-download-models all      # the models this system uses, once; or install from the Models tab
 kabardian-translator               # opens http://127.0.0.1:5500
 ```
+
+On the first start the models this system uses are downloaded in the background (once; progress is shown on the
+page) — whatever is ready can be used at once. To download them beforehand: `kabardian-download-models all`; to start
+without downloading: `kabardian-translator --no-download`.
 
 Requirements: Python 3.11+. On a Mac with Apple Silicon (macOS 13+) about 3 GB of free memory while MADLAD is
 loaded; its first start compiles the model for the Neural Engine (about two minutes), later starts are fast. On

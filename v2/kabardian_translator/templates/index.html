@@ -45,6 +45,8 @@ textarea,.out{flex:1;width:100%;border:0;resize:vertical;background:transparent;
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
 .btn:disabled{opacity:.45;cursor:default}
 .menuwrap{position:relative}
+.dl{display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--soft);font-size:14px}
+.dl.on{display:block}.dl .progress{margin-top:8px;border-radius:3px}
 #engine .seg button{font-size:13px;padding:4px 10px}#engine .seg button:disabled{opacity:.5;cursor:default}
 #engine .fixed{font-size:13px;color:var(--muted)}
 .menu{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:20;min-width:300px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 8px 28px rgba(0,0,0,.18)}
@@ -90,6 +92,7 @@ tr.grp td{background:var(--soft);font-weight:700}
 <main>
 
 <section id="translate" class="on">
+  <div class="dl" id="dlbanner"><span id="dltext"></span><div class="progress"><i id="dlprog"></i></div></div>
   <div class="card">
     <div class="bar">
       <select id="src"></select>
@@ -185,7 +188,8 @@ const T = {
   v_silero:"Silero",v_baltic:"наша балтийская модель",v_apple:"голос Apple",v_windows:"голос Windows",v_none:"—",
   from_en:"из англ.",from_ru:"из рус.",scripts:{Cyrillic:"кириллица",Latin:"латиница",Greek:"греческое",Armenian:"армянское",Georgian:"грузинское"},
   models_intro:"Все модели работают на этом компьютере, без интернета. Скачиваются один раз из релизов kubataba/sayfable-models с проверкой контрольной суммы.",
-  install:"Установить",installed:"установлена",notinstalled:"не установлена",installing:"устанавливается…",
+  install:"Установить",installed:"установлена",notinstalled:"не установлена",installing:"устанавливается…",queued:"в очереди",
+  dl_now:"Скачиваются модели (один раз): {x}",dl_queue:"дальше: {x}",dl_wait:"Модель ещё скачивается — прогресс вверху страницы.",
   about:`<h2>Kabardian Translator 3</h2>
   <p>Локальный переводчик и синтез речи для кабардинского и ещё 30–37 языков. Всё работает на вашем компьютере — текст никуда не отправляется.</p>
   <ul><li><b>Русский ↔ кабардинский</b> — наша модель (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2. С правилами приложения SayFable: кавычки, сторож газетных названий и петель, замена калек.</li>
@@ -211,7 +215,8 @@ const T = {
   v_silero:"Silero",v_baltic:"our Baltic model",v_apple:"Apple voice",v_windows:"Windows voice",v_none:"—",
   from_en:"from en",from_ru:"from ru",scripts:{Cyrillic:"Cyrillic",Latin:"Latin",Greek:"Greek",Armenian:"Armenian",Georgian:"Georgian"},
   models_intro:"Every model runs on this computer, offline. Each is downloaded once from the kubataba/sayfable-models releases and verified by checksum.",
-  install:"Install",installed:"installed",notinstalled:"not installed",installing:"installing…",
+  install:"Install",installed:"installed",notinstalled:"not installed",installing:"installing…",queued:"queued",
+  dl_now:"Downloading the models (once): {x}",dl_queue:"next: {x}",dl_wait:"The model is still downloading — see the progress at the top of the page.",
   about:`<h2>Kabardian Translator 3</h2>
   <p>Local translation and speech for Kabardian and 30–37 more languages. Everything runs on your computer — no text leaves it.</p>
   <ul><li><b>Russian ↔ Kabardian</b> — our model (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, with the SayFable app's rules: quotes, a guard against press names and loops, calque replacement.</li>
@@ -237,7 +242,8 @@ const T = {
   v_silero:"Silero",v_baltic:"mūsu baltu modelis",v_apple:"Apple balss",v_windows:"Windows balss",v_none:"—",
   from_en:"no angļu",from_ru:"no krievu",scripts:{Cyrillic:"kirilica",Latin:"latīņu",Greek:"grieķu",Armenian:"armēņu",Georgian:"gruzīnu"},
   models_intro:"Visi modeļi darbojas šajā datorā, bez interneta. Tos lejupielādē vienreiz no kubataba/sayfable-models laidieniem un pārbauda ar kontrolsummu.",
-  install:"Instalēt",installed:"instalēts",notinstalled:"nav instalēts",installing:"instalē…",
+  install:"Instalēt",installed:"instalēts",notinstalled:"nav instalēts",installing:"instalē…",queued:"rindā",
+  dl_now:"Lejupielādē modeļus (vienreiz): {x}",dl_queue:"tālāk: {x}",dl_wait:"Modelis vēl tiek lejupielādēts — progress lapas augšā.",
   about:`<h2>Kabardian Translator 3</h2>
   <p>Lokāla tulkošana un runas sintēze kabardiešu un vēl 30–37 valodām. Viss darbojas jūsu datorā — teksts netiek nekur sūtīts.</p>
   <ul><li><b>Krievu ↔ kabardiešu</b> — mūsu modelis (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, ar lietotnes SayFable noteikumiem: pēdiņas, sargs pret avīžu nosaukumiem un cilpām, kalku aizstāšana.</li>
@@ -400,7 +406,7 @@ function follow(id){
     if (j.state === "queued" || (j.state === "running" && !j.done)) $("#status").textContent = t("loading");
     if (j.state === "running" && j.done) { $("#status").textContent = t("progress",{d:j.done,t:j.total}); setOut(j.partial); }
     if (j.state === "done") { clearInterval(timer); setOut(j.result); $("#status").textContent = (j.name ? `📄 ${j.name} · ` : "") + t("done",{s:j.seconds}); $("#go").disabled = false; $("#save").disabled = false; $("#prog").style.width = "100%"; }
-    if (j.state === "error") { clearInterval(timer); $("#go").disabled = false; $("#status").textContent = ""; note(j.error.includes("not installed") ? t("nomodel") : j.error, true); }
+    if (j.state === "error") { clearInterval(timer); $("#go").disabled = false; $("#status").textContent = ""; note(j.error.includes("not installed") ? t(DOWNLOADING ? "dl_wait" : "nomodel") : j.error, true); }
   }, 700);
 }
 
@@ -546,18 +552,38 @@ async function upload(f){
 }
 
 // models
+// models: the cards on the Models tab, and the banner while the missing ones download (at start or by a button)
+let DOWNLOADING = false;
+const SHORT = {kbd: "Kabardian", madlad: "MADLAD-400", small100: "SMaLL-100", silero: "Silero", baltic: "Baltic"};
+function pct(log){ const m = (log || []).slice().reverse().map(l => l.match(/(\d+)%/)).find(Boolean); return m ? +m[1] : null; }
 async function loadModels(){
   const r = await fetch("/api/models").then(r => r.json());
   const box = $("#modelcards"); box.innerHTML = "";
   let running = false;
+  const now = [], queued = [];
   for (const [k, m] of Object.entries(r.models)) {
     const inst = m.install || {};
-    running = running || inst.state === "running";
-    const state = m.installed ? t("installed") : inst.state === "running" ? t("installing") : t("notinstalled");
+    if (!m.installed && inst.state === "running") now.push([k, inst]);
+    if (!m.installed && inst.state === "queued") queued.push(k);
+  }
+  const was = DOWNLOADING;
+  DOWNLOADING = now.length > 0 || queued.length > 0;
+  $("#dlbanner").classList.toggle("on", DOWNLOADING);
+  if (DOWNLOADING) {
+    const cur = now.map(([k, i]) => { const p = pct(i.log); return SHORT[k] + (p != null ? ` ${p}%` : ""); }).join(", ");
+    $("#dltext").textContent = t("dl_now", {x: cur || "…"}) + (queued.length ? " · " + t("dl_queue", {x: queued.map(k => SHORT[k]).join(", ")}) : "");
+    const p = now.length ? pct(now[0][1].log) : 0;
+    $("#dlprog").style.width = `${Math.max(2, p || 0)}%`;
+  }
+  if (was && !DOWNLOADING) loadLanguages();        // new models bring new voices
+  for (const [k, m] of Object.entries(r.models)) {
+    const inst = m.install || {};
+    running = running || inst.state === "running" || inst.state === "queued";
+    const state = m.installed ? t("installed") : inst.state === "running" ? t("installing") : inst.state === "queued" ? t("queued") : t("notinstalled");
     const div = document.createElement("div"); div.className = "card";
     div.innerHTML = `<h3>${m.title}</h3><div class="small muted">${m.size_mb.toLocaleString(ui)} MB · ${m.licence}</div>
       <p><span class="pill">${state}</span></p>
-      ${m.installed ? "" : `<button class="btn primary" ${inst.state==="running"?"disabled":""}>${t("install")}</button>`}
+      ${m.installed ? "" : `<button class="btn primary" ${inst.state==="running"||inst.state==="queued"?"disabled":""}>${t("install")}</button>`}
       ${inst.log ? `<div class="log">${inst.log.slice(-4).join("\n")}${inst.error?"\n"+inst.error:""}</div>` : ""}`;
     const b = div.querySelector("button");
     if (b) b.onclick = async () => { await fetch(`/api/models/${k}/install`, {method:"POST"}); loadModels(); };
