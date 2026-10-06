@@ -33,19 +33,39 @@ runs on your computer — no text leaves it.
 
 ## Install
 
-```bash
-pip install kabardian-translator
-kabardian-translator               # opens http://127.0.0.1:5500
+Python **3.11 or newer**. Which Python you use matters on a Mac only:
+
+| system | Python | translator for the other languages |
+|---|---|---|
+| Mac with Apple Silicon | 3.11, 3.12, 3.13 | MADLAD-400 (or SMaLL-100 by choice) |
+| Mac with Apple Silicon | 3.14 | SMaLL-100 only — coremltools, which runs MADLAD, has no build for Python 3.14 yet |
+| Windows, Linux, Intel Mac | 3.11 – 3.14 | SMaLL-100 |
+
+**Windows** — Python from python.org with «Add python.exe to PATH» ticked, then in PowerShell or cmd:
+
+```powershell
+py -m pip install kabardian-translator
+kabardian-translator
 ```
 
-On the first start the models this system uses are downloaded in the background (once; progress is shown on the
-page) — whatever is ready can be used at once. To download them beforehand: `kabardian-download-models all`; to start
-without downloading: `kabardian-translator --no-download`.
+**Mac** — the system `python3` is too old (3.9), and Homebrew's Python refuses `pip install` into itself. The simplest
+is [uv](https://docs.astral.sh/uv/) (`brew install uv`), which keeps the program in its own environment:
 
-Requirements: Python 3.11+. MADLAD on a Mac needs Python 3.11–3.13: coremltools has no build for 3.14 yet, and with
-Python 3.14 a Mac uses SMaLL-100 like Windows and Linux. On a Mac with Apple Silicon (macOS 13+) about 3 GB of free
-memory while MADLAD is loaded; its first start compiles the model for the Neural Engine (about two minutes), later starts are fast. On
-Windows and Linux about 1.5 GB of free memory.
+```bash
+uv tool install --python 3.11 kabardian-translator
+kabardian-translator
+```
+
+**Linux** — `pipx install kabardian-translator` or `uv tool install kabardian-translator`, then `kabardian-translator`.
+
+The page opens at http://127.0.0.1:5500. On the first start the models this system uses are downloaded in the
+background (once, 0.8–1.7 GB; progress is shown on the page) — whatever is ready can be used at once. To download them
+beforehand: `kabardian-download-models all`; to start without downloading: `kabardian-translator --no-download`.
+
+Updating: `py -m pip install -U kabardian-translator` (Windows), `uv tool upgrade kabardian-translator` (Mac, Linux).
+
+Memory: on a Mac with Apple Silicon (macOS 13+) about 3 GB free while MADLAD is loaded — its first start prepares the
+model for the Neural Engine (about two minutes), later starts are fast; with SMaLL-100 about 1.5 GB.
 
 **MADLAD or SMaLL-100 on a Mac.** The engine name next to the language selectors is a switch. SMaLL-100 is for a
 rough translation or a small disk: 289 MB instead of 1.3 GB and about ten times faster, but 7–8 chrF weaker on
