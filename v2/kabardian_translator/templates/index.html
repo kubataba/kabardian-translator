@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kabardian Translator</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--fg:#1c1c1a;--muted:#6d6b64;--line:#e3e0d7;--accent:#2f6f5e;--accent-fg:#fff;
+  --soft:#eaf3ef;--warn:#9a6a00;--warnbg:#fff6dc;--err:#a3332b;--errbg:#fde9e7;--shadow:0 1px 2px rgba(0,0,0,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;
+  --line:#33342f;--accent:#7fc4ae;--accent-fg:#10201b;--soft:#1f2c27;--warn:#e2bd5c;--warnbg:#2b2617;--err:#f09b92;--errbg:#3a1f1c}}
+:root[data-theme=dark]{--bg:#141513;--card:#1d1e1b;--fg:#e9e7e0;--muted:#9c9a92;--line:#33342f;--accent:#7fc4ae;--accent-fg:#10201b;
+  --soft:#1f2c27;--warn:#e2bd5c;--warnbg:#2b2617;--err:#f09b92;--errbg:#3a1f1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+.brand{font-weight:700;font-size:17px;margin-right:auto}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+nav button,.seg button{border:0;background:none;color:var(--muted);font:inherit;padding:6px 10px;border-radius:8px;cursor:pointer}
+nav button.on{color:var(--fg);background:var(--soft);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:2px}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+main{max-width:1180px;margin:0 auto;padding:20px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+select,input[type=range]{font:inherit;color:var(--fg)}
+select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:190px}
+.swap{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;width:38px;height:36px;cursor:pointer;font-size:17px}
+.panes{display:grid;grid-template-columns:1fr 1fr}
+.pane{display:flex;flex-direction:column;min-height:380px}
+.pane+.pane{border-left:1px solid var(--line)}
+textarea,.out{flex:1;width:100%;border:0;resize:vertical;background:transparent;color:var(--fg);font:16px/1.6 inherit;font-family:inherit;padding:14px 16px;min-height:300px;outline:none}
+.out{white-space:pre-wrap;overflow:auto;max-height:70vh}
+.out.empty{color:var(--muted)}
+.out .s{cursor:pointer;border-radius:4px;transition:background .15s}
+.out .s:hover{background:var(--soft)}
+.out .s.hl{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.out .w.hl{background:var(--accent);color:var(--accent-fg);border-radius:3px}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line)}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.muted{color:var(--muted)}.small{font-size:13px}.grow{flex:1}
+.progress{height:4px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.drop{margin-top:14px;padding:16px;border:1.5px dashed var(--line);border-radius:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.drop.over{border-color:var(--accent);background:var(--soft)}
+.note{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--warnbg);color:var(--warn);font-size:14px;display:none}
+.note.err{background:var(--errbg);color:var(--err)}
+label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+tr.grp td{background:var(--soft);font-weight:700}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--soft);font-size:12px;white-space:nowrap}
+.q{font-variant-numeric:tabular-nums}
+.q.lo{color:var(--err)}.q.mid{color:var(--warn)}.q.hi{color:var(--accent)}
+.models{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.models .card{padding:16px}
+.models h3{margin:0 0 4px;font-size:16px}
+.log{font:12px ui-monospace,Menlo,monospace;color:var(--muted);max-height:90px;overflow:auto;margin-top:8px;white-space:pre-wrap}
+.about{padding:20px 24px;max-width:860px}.about h2{margin-top:0}
+@media (max-width:820px){.panes{grid-template-columns:1fr}.pane+.pane{border-left:0;border-top:1px solid var(--line)}
+  .bar select{min-width:0;flex:1 1 38%}.bar .grow{display:none}#route{flex-basis:100%}main{padding:12px}header{padding:10px 12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Kabardian Translator <small>v{{ version }}</small></div>
+  <nav>
+    <button data-tab="translate" class="on" data-i="tab_translate"></button>
+    <button data-tab="languages" data-i="tab_languages"></button>
+    <button data-tab="models" data-i="tab_models"></button>
+    <button data-tab="about" data-i="tab_about"></button>
+  </nav>
+  <div class="seg" id="ui"><button data-ui="ru">RU</button><button data-ui="en">EN</button><button data-ui="lv">LV</button></div>
+</header>
+<main>
+
+<section id="translate" class="on">
+  <div class="card">
+    <div class="bar">
+      <select id="src"></select>
+      <button class="swap" id="swap" title="⇄">⇄</button>
+      <select id="tgt"></select>
+      <span class="grow"></span>
+      <span class="small muted" id="route"></span>
+    </div>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="panes">
+      <div class="pane">
+        <textarea id="text" spellcheck="false"></textarea>
+        <div class="tools">
+          <button class="btn primary" id="go" data-i="translate"></button>
+          <button class="btn" id="speak-src" data-i="listen"></button>
+          <button class="btn" id="clear" data-i="clear"></button>
+          <span class="grow"></span>
+          <span class="small muted" id="count"></span>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="out empty" id="out"></div>
+        <div class="tools">
+          <button class="btn" id="speak-tgt" data-i="listen"></button>
+          <select id="voice" style="min-width:150px"></select>
+          <button class="btn" id="copy" data-i="copy"></button>
+          <span class="grow"></span>
+          <button class="btn" id="dl-txt">.txt</button>
+          <button class="btn" id="dl-docx">.docx</button>
+          <label class="chk small"><input type="checkbox" id="both"><span data-i="both"></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="tools small">
+      <span id="status" class="muted"></span>
+      <span class="grow"></span>
+      <label class="chk"><input type="checkbox" id="fast"><span data-i="fast"></span></label>
+      <label class="chk"><span data-i="speed"></span> <input type="range" id="rate" min="0.7" max="1.4" step="0.1" value="1"></label>
+    </div>
+  </div>
+
+  <div class="drop" id="drop">
+    <strong data-i="doc_title"></strong>
+    <span class="muted small" data-i="doc_hint"></span>
+    <span class="grow"></span>
+    <input type="file" id="file" accept=".txt,.md,.docx" hidden>
+    <button class="btn" id="pick" data-i="doc_pick"></button>
+  </div>
+  <div class="note" id="note"></div>
+</section>
+
+<section id="languages">
+  <div class="card" style="overflow-x:auto">
+    <div class="bar"><span data-i="lang_intro" class="small"></span></div>
+    <table id="langtable"><thead><tr>
+      <th data-i="col_lang"></th><th data-i="col_script"></th><th data-i="col_route"></th>
+      <th data-i="col_quality"></th><th data-i="col_voice"></th></tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<section id="models">
+  <p class="small muted" data-i="models_intro"></p>
+  <div class="models" id="modelcards"></div>
+</section>
+
+<section id="about">
+  <div class="card about" id="abouttext"></div>
+</section>
+</main>
+
+<script>
+const T = {
+ ru:{tab_translate:"Перевод",tab_languages:"Языки",tab_models:"Модели",tab_about:"О проекте",translate:"Перевести",
+  listen:"▶ Слушать",stop:"■ Стоп",clear:"Очистить",copy:"Копировать",both:"с оригиналом",fast:"быстрый кабардинский (жадный поиск)",
+  speed:"темп",doc_title:"Документ",doc_hint:".txt, .md или .docx любого размера: перевод идёт по абзацам, результат можно скачать.",
+  doc_pick:"Выбрать файл…",placeholder:"Введите или вставьте текст любой длины — или перетащите сюда файл .txt, .md, .docx…",result:"Здесь появится перевод",
+  chars:"знаков",progress:"абзац {d} из {t}",done:"готово за {s} с",working:"переводится…",loading:"первый запуск: модель загружается (до 1–2 минут)…",
+  copied:"скопировано",nomodel:"Модель не установлена — откройте вкладку «Модели».",
+  route_kbd:"наша модель ru↔kbd",route_madlad:"MADLAD-400",route_via:"через {x}",
+  lang_intro:"Качество — chrF на FLORES-200 (чем выше, тем лучше; 50+ хорошо, 35–50 понятно, ниже 35 — слабо). Кабардинский с любым языком, кроме русского, переводится через русский.",
+  col_lang:"Язык",col_script:"Письмо",col_route:"Как переводится",col_quality:"Качество (chrF)",col_voice:"Голос",
+  r_kbd:"своя модель ru↔kbd",r_direct:"напрямую",r_via_ru:"через русский",
+  v_silero:"Silero",v_baltic:"наша балтийская модель",v_apple:"голос Apple",v_none:"—",
+  from_en:"из англ.",from_ru:"из рус.",scripts:{Cyrillic:"кириллица",Latin:"латиница",Greek:"греческое",Armenian:"армянское",Georgian:"грузинское"},
+  models_intro:"Все модели работают на этом Mac, без интернета. Скачиваются один раз из релизов kubataba/sayfable-models с проверкой контрольной суммы.",
+  install:"Установить",installed:"установлена",notinstalled:"не установлена",installing:"устанавливается…",
+  about:`<h2>Kabardian Translator 3</h2>
+  <p>Локальный переводчик и синтез речи для кабардинского и ещё 36 языков. Всё работает на вашем Mac — текст никуда не отправляется.</p>
+  <ul><li><b>Русский ↔ кабардинский</b> — наша модель (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2. С правилами приложения SayFable: кавычки, сторож газетных названий и петель, замена калек.</li>
+  <li><b>Остальные языки</b> — MADLAD-400 3B (Google, Apache-2.0) в нашей сборке для Neural Engine Apple.</li>
+  <li><b>Голос</b> — Silero v5 (кабардинский, русский, языки СНГ), наша балтийская модель (латышский, литовский, эстонский) и голоса Apple, установленные на Mac.</li></ul>
+  <p>Требуется macOS на Apple Silicon. Для Windows и Linux остаётся версия 1 (каталог <code>v1/</code>).</p>
+  <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Некоммерческое использование — CC BY-NC 4.0; модели — под своими лицензиями (вкладка «Модели»).</p>`},
+ en:{tab_translate:"Translate",tab_languages:"Languages",tab_models:"Models",tab_about:"About",translate:"Translate",
+  listen:"▶ Listen",stop:"■ Stop",clear:"Clear",copy:"Copy",both:"with original",fast:"fast Kabardian (greedy search)",
+  speed:"pace",doc_title:"Document",doc_hint:".txt, .md or .docx of any size: translated paragraph by paragraph, ready to download.",
+  doc_pick:"Choose a file…",placeholder:"Type or paste text of any length — or drop a .txt, .md or .docx file here…",result:"The translation appears here",
+  chars:"characters",progress:"paragraph {d} of {t}",done:"done in {s} s",working:"translating…",loading:"first run: loading the model (up to 1–2 minutes)…",
+  copied:"copied",nomodel:"The model is not installed — open the Models tab.",
+  route_kbd:"our ru↔kbd model",route_madlad:"MADLAD-400",route_via:"via {x}",
+  lang_intro:"Quality is chrF on FLORES-200 (higher is better: 50+ good, 35–50 understandable, below 35 weak). Kabardian with any language other than Russian goes through Russian.",
+  col_lang:"Language",col_script:"Script",col_route:"How it is translated",col_quality:"Quality (chrF)",col_voice:"Voice",
+  r_kbd:"own ru↔kbd model",r_direct:"directly",r_via_ru:"via Russian",
+  v_silero:"Silero",v_baltic:"our Baltic model",v_apple:"Apple voice",v_none:"—",
+  from_en:"from en",from_ru:"from ru",scripts:{Cyrillic:"Cyrillic",Latin:"Latin",Greek:"Greek",Armenian:"Armenian",Georgian:"Georgian"},
+  models_intro:"Every model runs on this Mac, offline. Each is downloaded once from the kubataba/sayfable-models releases and verified by checksum.",
+  install:"Install",installed:"installed",notinstalled:"not installed",installing:"installing…",
+  about:`<h2>Kabardian Translator 3</h2>
+  <p>Local translation and speech for Kabardian and 36 more languages. Everything runs on your Mac — no text leaves it.</p>
+  <ul><li><b>Russian ↔ Kabardian</b> — our model (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, with the SayFable app's rules: quotes, a guard against press names and loops, calque replacement.</li>
+  <li><b>Every other language</b> — MADLAD-400 3B (Google, Apache-2.0) in our build for the Apple Neural Engine.</li>
+  <li><b>Speech</b> — Silero v5 (Kabardian, Russian, CIS languages), our Baltic model (Latvian, Lithuanian, Estonian) and the Apple voices installed on the Mac.</li></ul>
+  <p>Requires macOS on Apple Silicon. Windows and Linux stay on version 1 (folder <code>v1/</code>).</p>
+  <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Non-commercial use — CC BY-NC 4.0; models under their own licences (Models tab).</p>`},
+ lv:{tab_translate:"Tulkošana",tab_languages:"Valodas",tab_models:"Modeļi",tab_about:"Par projektu",translate:"Tulkot",
+  listen:"▶ Klausīties",stop:"■ Apturēt",clear:"Notīrīt",copy:"Kopēt",both:"ar oriģinālu",fast:"ātrā kabardiešu (alkatīgā meklēšana)",
+  speed:"temps",doc_title:"Dokuments",doc_hint:".txt, .md vai .docx jebkurā apjomā: tulko pa rindkopām, rezultātu var lejupielādēt.",
+  doc_pick:"Izvēlēties failu…",placeholder:"Ievadiet vai ielīmējiet jebkura garuma tekstu — vai ievelciet šeit .txt, .md, .docx failu…",result:"Šeit parādīsies tulkojums",
+  chars:"zīmes",progress:"rindkopa {d} no {t}",done:"gatavs {s} s",working:"tulko…",loading:"pirmā palaišana: ielādē modeli (līdz 1–2 minūtēm)…",
+  copied:"nokopēts",nomodel:"Modelis nav instalēts — atveriet cilni «Modeļi».",
+  route_kbd:"mūsu ru↔kbd modelis",route_madlad:"MADLAD-400",route_via:"caur {x}",
+  lang_intro:"Kvalitāte ir chrF uz FLORES-200 (jo augstāk, jo labāk: 50+ labi, 35–50 saprotami, zem 35 vāji). Kabardiešu valodu ar jebkuru citu, izņemot krievu, tulko caur krievu valodu.",
+  col_lang:"Valoda",col_script:"Raksts",col_route:"Kā tulko",col_quality:"Kvalitāte (chrF)",col_voice:"Balss",
+  r_kbd:"savs ru↔kbd modelis",r_direct:"tieši",r_via_ru:"caur krievu",
+  v_silero:"Silero",v_baltic:"mūsu baltu modelis",v_apple:"Apple balss",v_none:"—",
+  from_en:"no angļu",from_ru:"no krievu",scripts:{Cyrillic:"kirilica",Latin:"latīņu",Greek:"grieķu",Armenian:"armēņu",Georgian:"gruzīnu"},
+  models_intro:"Visi modeļi darbojas šajā Mac datorā, bez interneta. Tos lejupielādē vienreiz no kubataba/sayfable-models laidieniem un pārbauda ar kontrolsummu.",
+  install:"Instalēt",installed:"instalēts",notinstalled:"nav instalēts",installing:"instalē…",
+  about:`<h2>Kabardian Translator 3</h2>
+  <p>Lokāla tulkošana un runas sintēze kabardiešu un vēl 36 valodām. Viss darbojas jūsu Mac datorā — teksts netiek nekur sūtīts.</p>
+  <ul><li><b>Krievu ↔ kabardiešu</b> — mūsu modelis (MarianMT 61M, int8 ONNX): FLORES-200 ru→kbd 57.4, kbd→ru 50.2, ar lietotnes SayFable noteikumiem: pēdiņas, sargs pret avīžu nosaukumiem un cilpām, kalku aizstāšana.</li>
+  <li><b>Pārējās valodas</b> — MADLAD-400 3B (Google, Apache-2.0) mūsu versijā Apple Neural Engine.</li>
+  <li><b>Balss</b> — Silero v5 (kabardiešu, krievu, NVS valodas), mūsu baltu modelis (latviešu, lietuviešu, igauņu) un Mac datorā instalētās Apple balsis.</li></ul>
+  <p>Nepieciešama macOS uz Apple Silicon. Windows un Linux paliek 1. versija (mape <code>v1/</code>).</p>
+  <p class="muted small">© Eduard Emkuzhev (kubataba), SIA Copper Line. Nekomerciāla izmantošana — CC BY-NC 4.0; modeļiem savas licences (cilne «Modeļi»).</p>`}
+};
+const $ = s => document.querySelector(s);
+const store = {get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let ui = store.get("ui", (navigator.language||"en").slice(0,2)); if(!T[ui]) ui = "en";
+let LANGS = [], GROUPS = {}, job = null, lastResult = "", lastOriginal = "", timer = null;
+const t = (k, v={}) => (T[ui][k]||T.en[k]||k).replace(/\{(\w)\}/g, (_,x)=>v[x]??"");
+
+function applyUI(){
+  document.documentElement.lang = ui;
+  document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
+  document.querySelectorAll("#ui button").forEach(b => b.classList.toggle("on", b.dataset.ui === ui));
+  $("#text").placeholder = t("placeholder");
+  if(!lastResult){ $("#out").textContent = t("result"); }
+  $("#abouttext").innerHTML = t("about");
+  loadLanguages(); loadModels(); updateCount();
+}
+document.querySelectorAll("#ui button").forEach(b => b.onclick = () => { ui = b.dataset.ui; store.set("ui", ui); applyUI(); });
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
+  store.set("tab", b.dataset.tab);
+});
+
+async function loadLanguages(){
+  const r = await fetch(`/api/languages?ui=${ui}`).then(r => r.json());
+  LANGS = r.languages; GROUPS = r.groups;
+  const keepS = $("#src").value || store.get("src","ru"), keepT = $("#tgt").value || store.get("tgt","kbd");
+  for (const sel of [$("#src"), $("#tgt")]) {
+    sel.innerHTML = "";
+    for (const g of Object.keys(GROUPS)) {
+      const og = document.createElement("optgroup"); og.label = GROUPS[g];
+      LANGS.filter(l => l.group === g).sort((a,b) => g === "core" ? 0 : a.name.localeCompare(b.name, ui))
+        .forEach(l => og.append(new Option(l.name, l.code)));
+      sel.append(og);
+    }
+  }
+  $("#src").value = keepS; $("#tgt").value = keepT;
+  renderTable(); showRoute(); loadVoices();
+}
+function q(v){ if(v==null) return '<span class="muted">—</span>'; const c = v>=50?"hi":v>=35?"mid":"lo"; return `<span class="q ${c}">${v.toFixed(1)}</span>`; }
+function renderTable(){
+  const tb = $("#langtable tbody"); tb.innerHTML = "";
+  for (const g of Object.keys(GROUPS)) {
+    tb.insertAdjacentHTML("beforeend", `<tr class="grp"><td colspan="5">${GROUPS[g]}</td></tr>`);
+    LANGS.filter(l => l.group === g).forEach(l => {
+      let qual;
+      if (l.code === "kbd") qual = `ru→kbd ${q(l.kbd_quality["ru→kbd"])} · kbd→ru ${q(l.kbd_quality["kbd→ru"])}`;
+      else if (l.code === "ru") qual = `${t("from_en")} ${q(l.quality[0])}`;
+      else if (l.quality) qual = [l.quality[0]!=null ? `${t("from_en")} ${q(l.quality[0])}` : "", l.quality[1]!=null ? `${t("from_ru")} ${q(l.quality[1])}` : ""].filter(Boolean).join(" · ");
+      else qual = "—";
+      const route = l.code==="kbd" ? t("r_kbd") : l.route==="via_ru" ? t("r_via_ru") : t("r_direct");
+      const v = l.voices && l.voices[0] ? t("v_"+l.voices[0]) : t("v_none");
+      tb.insertAdjacentHTML("beforeend", `<tr><td><b>${l.name}</b> <span class="muted small">${l.code}</span></td>
+        <td>${(T[ui].scripts||T.en.scripts)[l.script]||l.script}</td><td><span class="pill">${route}</span></td><td>${qual}</td><td>${v}</td></tr>`);
+    });
+  }
+}
+function langName(c){ const l = LANGS.find(x => x.code === c); return l ? l.name : c; }
+function showRoute(){
+  const s = $("#src").value, g = $("#tgt").value; store.set("src", s); store.set("tgt", g);
+  let r;
+  if ((s==="ru"&&g==="kbd")||(s==="kbd"&&g==="ru")) r = t("route_kbd");
+  else if (s==="kbd"||g==="kbd") r = `${t("route_kbd")} + ${t("route_madlad")}, ${t("r_via_ru")}`;
+  else r = t("route_madlad");
+  $("#route").textContent = r;
+}
+async function loadVoices(){
+  const r = await fetch(`/api/voices?lang=${$("#tgt").value}`).then(r => r.json());
+  const sel = $("#voice"); sel.innerHTML = "";
+  r.voices.forEach(v => sel.append(new Option(v.label, v.id)));
+  sel.disabled = !r.voices.length; $("#speak-tgt").disabled = !r.voices.length;
+}
+$("#src").onchange = showRoute;
+$("#tgt").onchange = () => { showRoute(); loadVoices(); };
+$("#swap").onclick = () => {
+  const s = $("#src").value; $("#src").value = $("#tgt").value; $("#tgt").value = s;
+  if (lastResult) { $("#text").value = lastResult; setOut(""); }
+  showRoute(); loadVoices(); updateCount();
+};
+function updateCount(){ $("#count").textContent = `${$("#text").value.length.toLocaleString(ui)} ${t("chars")}`; }
+$("#text").addEventListener("input", updateCount);
+$("#text").addEventListener("keydown", e => { if ((e.metaKey||e.ctrlKey) && e.key === "Enter") translate(); });
+$("#clear").onclick = () => { $("#text").value = ""; setOut(""); updateCount(); };
+function setOut(s){ if (typeof stopReading === "function" && P) stopReading(); lastResult = s; const o = $("#out"); o.textContent = s || t("result"); o.classList.toggle("empty", !s); }
+function note(msg, err){ const n = $("#note"); n.textContent = msg||""; n.style.display = msg ? "block" : "none"; n.classList.toggle("err", !!err); }
+
+async function translate(){
+  const text = $("#text").value; if (!text.trim()) return;
+  lastOriginal = text;
+  const r = await fetch("/api/translate", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({text, src:$("#src").value, tgt:$("#tgt").value, fast:$("#fast").checked})}).then(r => r.json());
+  if (r.error) return note(r.error, true);
+  follow(r.job);
+}
+$("#go").onclick = translate;
+
+function follow(id){
+  job = id; note(""); $("#go").disabled = true; setOut("");
+  $("#status").textContent = t("working"); $("#prog").style.width = "2%";
+  clearInterval(timer);
+  timer = setInterval(async () => {
+    const j = await fetch(`/api/jobs/${id}`).then(r => r.json());
+    if (j.total) $("#prog").style.width = `${Math.max(2, 100*j.done/j.total)}%`;
+    if (j.state === "queued" || (j.state === "running" && !j.done)) $("#status").textContent = t("loading");
+    if (j.state === "running" && j.done) { $("#status").textContent = t("progress",{d:j.done,t:j.total}); setOut(j.partial); }
+    if (j.state === "done") { clearInterval(timer); setOut(j.result); $("#status").textContent = (j.name ? `📄 ${j.name} · ` : "") + t("done",{s:j.seconds}); $("#go").disabled = false; $("#prog").style.width = "100%"; }
+    if (j.state === "error") { clearInterval(timer); $("#go").disabled = false; $("#status").textContent = ""; note(j.error.includes("not installed") ? t("nomodel") : j.error, true); }
+  }, 700);
+}
+
+async function speak(text, lang, voice){
+  if (!text.trim()) return;
+  const r = await fetch("/api/speak", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({text, lang, voice, speed: +$("#rate").value})});
+  if (!r.ok) { const e = await r.json().catch(() => ({})); return note(e.error || "speech error", true); }
+  const url = URL.createObjectURL(await r.blob()); new Audio(url).play();
+}
+// ---- reading the translation aloud with highlighting: paragraph by paragraph, the next one prepared ahead
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+let P = null;   // {paras, idx, audio, data: {}, raf, lang, voice, speed}
+function stopReading(){
+  if (!P) return;
+  if (P.audio) { P.audio.pause(); P.audio.src = ""; }
+  cancelAnimationFrame(P.raf); P = null;
+  document.querySelectorAll("#out .hl").forEach(e => e.classList.remove("hl"));
+  $("#speak-tgt").textContent = t("listen");
+}
+function paragraphs(text){
+  const out = []; const re = /[^\n]+/g; let m;
+  while ((m = re.exec(text))) if (m[0].trim()) out.push({start: m.index, end: m.index + m[0].length, text: m[0]});
+  return out;
+}
+function renderOut(paras, text){
+  const o = $("#out"); o.innerHTML = ""; o.classList.remove("empty"); let pos = 0;
+  paras.forEach((p, i) => {
+    if (p.start > pos) o.append(document.createTextNode(text.slice(pos, p.start)));
+    const span = document.createElement("span"); span.className = "p"; span.dataset.p = i; span.textContent = p.text;
+    o.append(span); pos = p.end;
+  });
+  if (pos < text.length) o.append(document.createTextNode(text.slice(pos)));
+}
+function renderParagraph(i){
+  const p = P.paras[i], d = P.data[i]; if (!d || d.rendered) return;
+  const span = $(`#out .p[data-p="${i}"]`); let html = "", pos = 0;
+  d.sentences.forEach((s, si) => {
+    if (s.start > pos) html += esc(p.text.slice(pos, s.start));
+    let inner = "", q = s.start;
+    d.words.forEach((w, wi) => { if (w.start >= s.start && w.end <= s.end) {
+      inner += esc(p.text.slice(q, w.start)) + `<span class="w" data-w="${wi}">${esc(p.text.slice(w.start, w.end))}</span>`; q = w.end; } });
+    inner += esc(p.text.slice(q, s.end));
+    html += `<span class="s" data-s="${si}">${inner}</span>`; pos = s.end;
+  });
+  html += esc(p.text.slice(pos)); span.innerHTML = html; d.rendered = true;
+  span.querySelectorAll(".s").forEach(e => e.onclick = () => playFrom(i, d.sentences[+e.dataset.s].t0));
+}
+function fetchParagraph(i){
+  if (!P || i >= P.paras.length || P.data[i]) return P && P.data[i] && P.data[i].ready;
+  const rec = P.data[i] = {};
+  rec.ready = fetch("/api/speak_marked", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({text: P.paras[i].text, lang: P.lang, voice: P.voice, speed: P.speed})})
+    .then(r => r.json()).then(j => { if (j.error) throw new Error(j.error); Object.assign(rec, j); return rec; });
+  return rec.ready;
+}
+async function playFrom(i, at = 0){
+  if (!P) return;
+  if (i >= P.paras.length) return stopReading();
+  P.idx = i;
+  let d;
+  try { d = await fetchParagraph(i); } catch (e) { note(e.message, true); return stopReading(); }
+  if (!P || P.idx !== i) return;
+  renderParagraph(i); fetchParagraph(i + 1);
+  if (P.audio) { P.audio.pause(); }
+  const a = P.audio = new Audio(d.audio); a.currentTime = at;
+  a.onended = () => { if (P && P.audio === a) playFrom(i + 1); };
+  a.play();
+  const span = $(`#out .p[data-p="${i}"]`);
+  const tick = () => {
+    if (!P || P.audio !== a) return;
+    const now = a.currentTime;
+    span.querySelectorAll(".s").forEach(e => { const s = d.sentences[+e.dataset.s];
+      const on = now >= s.t0 && now < s.t1 + 0.18; if (on !== e.classList.contains("hl")) { e.classList.toggle("hl", on);
+        if (on) e.scrollIntoView({block: "nearest", behavior: "smooth"}); } });
+    span.querySelectorAll(".w").forEach(e => { const w = d.words[+e.dataset.w];
+      e.classList.toggle("hl", now >= w.t0 && now < w.t1); });
+    document.querySelectorAll(`#out .p:not([data-p="${i}"]) .hl`).forEach(e => e.classList.remove("hl"));
+    P.raf = requestAnimationFrame(tick);
+  };
+  cancelAnimationFrame(P.raf); P.raf = requestAnimationFrame(tick);
+}
+$("#speak-tgt").onclick = () => {
+  if (P) return stopReading();
+  if (!lastResult.trim()) return;
+  const paras = paragraphs(lastResult);
+  P = {paras, idx: 0, data: {}, lang: $("#tgt").value, voice: $("#voice").value, speed: +$("#rate").value};
+  renderOut(paras, lastResult);
+  $("#speak-tgt").textContent = t("stop");
+  playFrom(0);
+};
+$("#speak-src").onclick = () => speak($("#text").value, $("#src").value, null);
+$("#copy").onclick = async () => { if (!lastResult) return; await navigator.clipboard.writeText(lastResult); $("#status").textContent = t("copied"); };
+function download(fmt){ if (job && lastResult) location.href = `/api/jobs/${job}/download?format=${fmt}&both=${$("#both").checked?1:0}`; }
+$("#dl-txt").onclick = () => download("txt"); $("#dl-docx").onclick = () => download("docx");
+
+// documents
+const drop = $("#drop");
+$("#pick").onclick = () => $("#file").click();
+$("#file").onchange = () => $("#file").files[0] && upload($("#file").files[0]);
+["dragenter","dragover"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", ev => ev.dataTransfer.files[0] && upload(ev.dataTransfer.files[0]));
+// a file dropped on the text field is a document too
+const ta = $("#text");
+["dragenter","dragover"].forEach(e => ta.addEventListener(e, ev => { if (ev.dataTransfer.types.includes("Files")) { ev.preventDefault(); drop.classList.add("over"); } }));
+ta.addEventListener("dragleave", () => drop.classList.remove("over"));
+ta.addEventListener("drop", ev => { if (ev.dataTransfer.files[0]) { ev.preventDefault(); drop.classList.remove("over"); upload(ev.dataTransfer.files[0]); } });
+async function upload(f){
+  const fd = new FormData(); fd.append("file", f); fd.append("src", $("#src").value); fd.append("tgt", $("#tgt").value);
+  fd.append("fast", $("#fast").checked ? "1" : "0");
+  const r = await fetch("/api/document", {method:"POST", body: fd}).then(r => r.json());
+  if (r.error) return note(r.error, true);
+  $("#text").value = r.text; lastOriginal = r.text; updateCount();
+  $("#status").textContent = `📄 ${f.name} — ${r.chars.toLocaleString(ui)} ${t("chars")}`;
+  follow(r.job);
+}
+
+// models
+async function loadModels(){
+  const r = await fetch("/api/models").then(r => r.json());
+  const box = $("#modelcards"); box.innerHTML = "";
+  let running = false;
+  for (const [k, m] of Object.entries(r.models)) {
+    const inst = m.install || {};
+    running = running || inst.state === "running";
+    const state = m.installed ? t("installed") : inst.state === "running" ? t("installing") : t("notinstalled");
+    const div = document.createElement("div"); div.className = "card";
+    div.innerHTML = `<h3>${m.title}</h3><div class="small muted">${m.size_mb.toLocaleString(ui)} MB · ${m.licence}</div>
+      <p><span class="pill">${state}</span></p>
+      ${m.installed ? "" : `<button class="btn primary" ${inst.state==="running"?"disabled":""}>${t("install")}</button>`}
+      ${inst.log ? `<div class="log">${inst.log.slice(-4).join("\n")}${inst.error?"\n"+inst.error:""}</div>` : ""}`;
+    const b = div.querySelector("button");
+    if (b) b.onclick = async () => { await fetch(`/api/models/${k}/install`, {method:"POST"}); loadModels(); };
+    box.append(div);
+  }
+  if (running) setTimeout(loadModels, 1500);
+}
+
+applyUI();
+const tab = store.get("tab", "translate"); const tb = document.querySelector(`nav button[data-tab=${tab}]`); if (tb) tb.click();
+</script>
+</body>
+</html>

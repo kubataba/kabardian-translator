@@ -1,0 +1,30 @@
+# Requires Python >= 3.11
+
+# Web framework
+flask
+
+# Machine learning
+torch
+transformers
+sentencepiece
+
+# Optimization
+accelerate
+
+# Hugging Face Hub
+huggingface-hub
+
+# Audio processing
+soundfile
+numpy
+scipy
+
+# Silero TTS dependencies
+torchaudio
+omegaconf
+
+# Russian stress/accentuation
+silero_stress
+
+# Optional: advanced audio processing
+librosa

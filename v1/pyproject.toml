@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kabardian-translator"
+version = "2.0.0"
+description = "Multilingual translator for Kabardian and Caucasian languages with neural translation and speech synthesis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "CC-BY-NC-4.0"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Kubataba", email = "info@copperline.info"}
+]
+maintainers = [
+    {name = "Kubataba", email = "info@copperline.info"}
+]
+dependencies = [
+    "flask>=3.0.0",
+    "torch>=2.1.0",
+    "transformers>=4.37.0",
+    "sentencepiece>=0.1.99",
+    "accelerate>=0.24.1",
+    "huggingface-hub>=0.20.3",
+    "soundfile>=0.12.1",
+    "numpy>=1.24.3",
+    "scipy>=1.11.0",
+    "torchaudio>=2.1.0",
+    "omegaconf>=2.3.0",
+    "silero-stress>=1.0.0",
+    "regex>=2023.10.3",
+]
+
+[project.optional-dependencies]
+audio = ["librosa>=0.10.0"]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+    "pytest-cov>=4.1.0",
+]
+gui = ["gradio>=4.0.0", "ipywidgets>=8.0.0"]
+full = ["librosa>=0.10.0", "gradio>=4.0.0"]
+
+[project.scripts]
+kabardian-translator = "kabardian_translator.cli:main"
+kabardian-download-models = "kabardian_translator.download_models:main"
+kabardian-translate = "kabardian_translator.cli:translate_cli"
+
+[tool.setuptools]
+packages = ["kabardian_translator"]
+
+[tool.setuptools.package-data]
+kabardian_translator = [
+    "templates/*.html",
+    "static/**/*",
+]

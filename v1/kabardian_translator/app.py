@@ -1,21 +1,29 @@
 # app.py
 # Kabardian-Russian Translator with Text-to-Speech and Transliteration
+# Version: 2.0.0
 # License: CC BY-NC 4.0 (Non-Commercial Use Only)
 
-# ЕСЛИ ЗАПУСК НАПРЯМУЮ (python app.py) - ПРЕДЛОЖИТЬ ИСПОЛЬЗОВАТЬ CLI
+# IF RUNNING DIRECTLY (python app.py) - SUGGEST USING THE PROPER ENTRY POINT
 if __name__ == "__main__":
-    print("🎯 Kabardian Translator")
+    print("🎯 Kabardian Translator v2.0.0")
     print("=" * 50)
-    print("⚠️  Рекомендуемый способ запуска:")
-    print("   kabardian-translator")
-    print("\n📦 Для установки как пакет:")
+    print("⚠️  Recommended ways to run:")
+    print()
+    print("1. After package installation:")
     print("   pip install kabardian-translator")
     print("   kabardian-translator")
-    print("\n📥 Для загрузки моделей:")
+    print()
+    print("2. Direct run (without installation):")
+    print("   python -m kabardian_translator.cli")
+    print()
+    print("3. Download models separately:")
     print("   kabardian-download-models")
+    print()
     print("=" * 50)
-    print("\n⚡ Запускаю в обычном режиме...")
-    print("   (модели не будут скачиваться автоматически)")
+    print("\n⚡ Starting Flask development server...")
+    print("   (models must be downloaded separately)")
+    print("   (use Ctrl+C to stop)")
+    print("=" * 50)
     import time
     time.sleep(2)
 
@@ -28,22 +36,22 @@ import signal
 import sys
 import gc
 
-# ИСПРАВЛЕННЫЕ ИМПОРТЫ - ДОБАВЛЕНО "."
+# FIXED IMPORTS - ADDED "."
 from .translation_service import TranslationService
 from .tts_service import TTSService
 from .transliterator import transliterator
 
-# ИСПРАВЛЕННЫЙ ПУТЬ К ШАБЛОНАМ
+# FIXED TEMPLATE PATH
 current_file = os.path.abspath(__file__)
 current_dir = os.path.dirname(current_file)
 template_dir = os.path.join(current_dir, 'templates')
 
-# Если templates не найден в текущей директории, попробовать родительскую
+# If templates not found in current directory, try parent directory
 if not os.path.exists(template_dir):
     parent_dir = os.path.dirname(current_dir)
     template_dir = os.path.join(parent_dir, 'kabardian_translator', 'templates')
     if not os.path.exists(template_dir):
-        # Последняя попытка
+        # Last attempt
         template_dir = os.path.join(current_dir, 'templates')
 
 app = Flask(__name__, template_folder=template_dir)
@@ -72,7 +80,7 @@ tts_service = TTSService(device)  # TTS will load on first use
 UI_TRANSLATIONS = {
     'ru': {
         'title': 'Кабардинский Переводчик',
-        'model_info': 'M2M100 + Транслитерация',
+        'model_info': '100 языков + Транслитерация',
         'theme_dark': 'Темная',
         'theme_light': 'Светлая',
         'tts_info': 'Озвучивание с транслитерацией: Турецкий/Азербайджанский/Грузинский/Армянский/Немецкий/Испанский/Латышский → автоматическая транслитерация',
@@ -105,7 +113,7 @@ UI_TRANSLATIONS = {
     },
     'en': {
         'title': 'Kabardian Translator',
-        'model_info': 'M2M100 + Transliteration',
+        'model_info': '100 Languages + Transliteration',
         'theme_dark': 'Dark',
         'theme_light': 'Light',
         'tts_info': 'Speech synthesis with transliteration: Turkish/Azerbaijani/Georgian/Armenian/German/Spanish/Latvian → automatic transliteration',
@@ -1526,14 +1534,28 @@ def synthesize():
         
         print(f"🔊 TTS request: lang_code={lang_code}, speaker={speaker}, text='{text[:50]}...'")
         
+        # ALWAYS use accent for supported languages
+        use_accent = True
+        
         # Use transliteration if language code provided AND transliteration needed
         if lang_code and transliterator.needs_transliteration(lang_code):
             print(f"🔤 Applying transliteration for {lang_code}")
-            result = tts_service.synthesize(text, speaker, lang_code)
+            result = tts_service.synthesize(
+                text=text, 
+                speaker=speaker, 
+                lang_code=lang_code,
+                use_accent=use_accent
+            )
         else:
-            # For languages without transliteration use provided speaker
+            # For languages without transliteration
             print(f"🔊 Direct TTS for {lang_code} with speaker {speaker}")
-            result = tts_service.synthesize(text, speaker)
+            # Pass lang_code even for non-transliteration to apply accents
+            result = tts_service.synthesize(
+                text=text, 
+                speaker=speaker, 
+                lang_code=lang_code,
+                use_accent=use_accent
+            )
         
         return jsonify(result)
         
@@ -1605,20 +1627,28 @@ def preview_transliteration():
 @app.route('/languages')
 def get_languages():
     """Return all languages with TTS information"""
-    langs_data = translator.get_languages_by_group()
-    
-    # Add TTS speaker information for each language
-    flat_langs = translator.get_flat_languages()
-    tts_speakers = {}
-    
-    for lang_code in flat_langs.keys():
-        tts_speakers[lang_code] = translator.get_tts_speaker(lang_code)
-    
-    return jsonify({
-        'languages': langs_data['languages'],
-        'groups': langs_data['groups'],
-        'tts_speakers': tts_speakers
-    })
+    try:
+        # Get languages data from translator
+        langs_data = translator.get_languages_by_group()
+        
+        # Get flat list of all languages for TTS mapping
+        flat_langs = translator.get_flat_languages()
+        
+        # Build TTS speakers mapping
+        tts_speakers = {}
+        for lang_code in flat_langs.keys():
+            tts_speakers[lang_code] = translator.get_tts_speaker(lang_code)
+        
+        return jsonify({
+            'languages': langs_data['languages'],
+            'groups': langs_data['groups'],
+            'tts_speakers': tts_speakers
+        })
+    except Exception as e:
+        print(f"❌ Error in /languages endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/ui-translations')
 def get_ui_translations():
@@ -1656,7 +1686,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 if __name__ == '__main__':
     health_info = translator.health_check()
     print("🚀 Kabardian Translator started (with transliteration)!")
-    print(f"📊 Model: M2M100 (float16) + Silero TTS")
+    print(f"📊 Model: NLLB-200 (float16) + Silero TTS")
     print(f"🌐 Supported languages: {health_info['supported_languages_count']}")
     print(f"   • Slavic: Russian, Ukrainian, Belarusian")
     print(f"   • Caucasian/Turkic: Kabardian, Kazakh, Georgian, Armenian")

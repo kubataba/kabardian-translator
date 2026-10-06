@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kabardian-translator"
+version = "3.0.0"
+description = "Local translation and speech for Kabardian and 36 more languages on macOS (Apple Silicon): our Kabardian model, MADLAD-400 on the Neural Engine, Silero, Baltic and Apple voices"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "CC-BY-NC-4.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Eduard Emkuzhev (kubataba)", email = "info@copperline.info" }]
+keywords = ["kabardian", "circassian", "translation", "madlad", "tts", "silero", "piper", "coreml", "onnx"]
+classifiers = [
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Linguistic",
+    "Environment :: Web Environment",
+    "Natural Language :: Russian",
+]
+dependencies = [
+    "flask>=3.0",
+    "numpy>=1.24",
+    "onnxruntime>=1.20",
+    "coremltools>=8.0",
+    "sentencepiece>=0.2",
+    "soundfile>=0.12",
+    "python-docx>=1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/kubataba/kabardian-translator"
+Model = "https://huggingface.co/kubataba/ru-kbd-bidirectional"
+
+[project.scripts]
+kabardian-translator = "kabardian_translator.cli:main"
+kabardian-translate = "kabardian_translator.cli:translate_cli"
+kabardian-download-models = "kabardian_translator.cli:download_models"
+
+[tool.setuptools]
+packages = ["kabardian_translator", "kabardian_translator.engines", "kabardian_translator.tts"]
+
+[tool.setuptools.package-data]
+kabardian_translator = ["templates/*.html", "data/*.json", "data/stress/*", "bin/baltic-phonemes"]
