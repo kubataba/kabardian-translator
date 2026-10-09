@@ -78,7 +78,7 @@ QUALITY = {
     "ro": (71.3, 54.7, 72.8, 52.5), "ca": (70.0, 58.2, 70.6, 57.1), "el": (57.8, 46.7, 64.4, 49.0),
     "fi": (60.0, 53.0, 59.3, 45.0), "ka": (23.7, 23.9, 39.0, 24.3), "hu": (58.2, 47.3, 62.7, 48.5), "en": (None, 62.4, None, 62.3),
 }
-KBD_QUALITY = {"ru→kbd": 57.4, "kbd→ru": 50.2}
+KBD_QUALITY = {"ru→kbd": 60.0, "kbd→ru": 51.9}
 
 # SMaLL-100 (FLORES-200, first 50 sentences, greedy, this package's engine): (en→xx, ru→xx, xx→en, xx→ru)
 QUALITY_SMALL = {

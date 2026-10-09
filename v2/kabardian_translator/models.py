@@ -44,19 +44,22 @@ class Package:
     licence: str
     note: str = ""
     extras: dict = field(default_factory=dict)
+    marker: str = ""     # version file written after a successful install and required by installed(): a new
+                         # release with the same file names must not pass for the old one (kbd v1 → v2)
 
 
 PACKAGES = {
     "kbd": Package(
-        key="kbd", title="Kabardian translator (Russian ↔ Kabardian)", tag="kbd-translate-v1", size_mb=84,
-        assets=(Asset("kbd-translate-v1.zip", "b25ce9cd50d3b0f103eb68f9de068bad41fa899522ecf011e0dd2985ab7bf292",
-                      "translate-kbd/kbd-translate-v1.zip", unzip=True),
+        key="kbd", title="Kabardian translator (Russian ↔ Kabardian)", tag="kbd-translate-v2", size_mb=83,
+        assets=(Asset("kbd-translate-v2.zip", "1a93b8aece1123cfe64360f7b27ca4aadc4959b367eae933045f6e253fc125d6",
+                      "translate-kbd/release-v2/kbd-translate-v2.zip", unzip=True),
                 # Russian form dictionary for the colour-compound rule (language pack ru, Wiktionary/Kaikki)
                 Asset("lang-ru.zip", "47fd7e8d0beb8fa36c5a2366ab80a3d9de58dcf77238726e77b64c0c0ad4c8db",
                       "lang-ru.zip", unzip=True, tag="lang-v13", members=("ru-morph.txt",))),
         required=("encoder_model.int8.onnx", "decoder_merged.int8.int32flag.onnx", "source.spm", "vocab.json",
                   "ru-morph.txt"),
-        licence="SIA Copper Line, see the release LICENCE; source model kubataba/ru-kbd-bidirectional (CC BY-NC 4.0)"),
+        licence="SIA Copper Line, see the release LICENCE; source model kubataba/ru-kbd-bidirectional (CC BY-NC 4.0)",
+        marker="kbd-translate-v2"),
     "madlad": Package(
         key="madlad", title="MADLAD-400 3B on the Neural Engine (every other language)", tag="translate-madlad-v1",
         size_mb=1335,
@@ -123,9 +126,15 @@ def _present(f: Path, r) -> bool:
     return any((f / x).exists() for x in r) if isinstance(r, tuple) else (f / r).exists()
 
 
+def _marker(pkg: Package) -> str:
+    return f".{pkg.marker}" if pkg.marker else ""
+
+
 def installed(key: str) -> bool:
-    f = folder(key)
-    return all(_present(f, r) for r in PACKAGES[key].required)
+    f, pkg = folder(key), PACKAGES[key]
+    if pkg.marker and not (f / _marker(pkg)).exists():
+        return False            # an older release of the same package (same file names): to be replaced
+    return all(_present(f, r) for r in pkg.required)
 
 
 def status() -> dict:
@@ -189,12 +198,23 @@ def _unzip(zip_path: Path, target: Path, members: tuple = ()) -> None:
                 shutil.copyfileobj(src, dst)
 
 
+def _remove_orphan_stages(key: str, older_than_s: float = 3600) -> None:
+    """A stage folder <key>-xxxx is removed by install() itself, except when the process dies mid-download (closed
+    terminal, killed server): then a partial download stays in models/ for ever. Older than an hour = no live
+    install owns it."""
+    import time
+    for d in MODELS.glob(f"{key}-*"):
+        if d.is_dir() and time.time() - d.stat().st_mtime > older_than_s:
+            shutil.rmtree(d, ignore_errors=True)
+
+
 def install(key: str, progress=print, force: bool = False) -> Path:
     pkg = PACKAGES[key]
     target = folder(key)
     if installed(key) and not force:
         return target
     MODELS.mkdir(parents=True, exist_ok=True)
+    _remove_orphan_stages(key)
     stage = Path(tempfile.mkdtemp(prefix=f"{key}-", dir=MODELS))
     try:
         unpacked = stage / "package"
@@ -216,6 +236,8 @@ def install(key: str, progress=print, force: bool = False) -> Path:
         missing = [r for r in pkg.required if not _present(unpacked, r)]
         if missing:
             raise RuntimeError(f"{key}: package is incomplete, missing {missing}")
+        if pkg.marker:
+            (unpacked / _marker(pkg)).write_text(pkg.tag + "\n", "utf-8")
         if target.exists():
             shutil.rmtree(target)
         unpacked.rename(target)

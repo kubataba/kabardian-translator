@@ -11,7 +11,8 @@ runs on your computer — no text leaves it.
 | models on disk | ≈ 1.7 GB with MADLAD, ≈ 0.8 GB with SMaLL-100 | ≈ 0.8 GB |
 
 - **Russian ↔ Kabardian** — our own model ([kubataba/ru-kbd-bidirectional](https://huggingface.co/kubataba/ru-kbd-bidirectional),
-  MarianMT 61M, int8 ONNX): FLORES-200 chrF **ru→kbd 57.4, kbd→ru 50.2**, with the rules of the SayFable app —
+  version 2, MarianMT 61M, int8 ONNX): FLORES-200 chrF **ru→kbd 60.0, kbd→ru 51.9** (version 1: 57.4 / 50.2), with the
+  rules of the SayFable app —
   sentence units, quoted speech, a guard against press names, lost numbers and loops, calque replacement.
 - **Every other pair** — on a Mac with Apple Silicon **MADLAD-400 3B** (Google, Apache-2.0) in our Core ML build for
   the Apple Neural Engine; elsewhere **SMaLL-100** (Mohammadshahi et al., MIT) in our int8 ONNX build — lighter, a
@@ -109,7 +110,7 @@ weak on both engines and marked so.
 
 | package | what | size | licence |
 |---|---|---|---|
-| `kbd-translate-v1` + `lang-v13/ru` | Russian ↔ Kabardian, int8 ONNX; Russian form dictionary for colour compounds | 80 MB + 3.6 MB | SIA Copper Line (release LICENCE); source model CC BY-NC 4.0; dictionary from Wiktionary via Kaikki, CC BY-SA 4.0 |
+| `kbd-translate-v2` + `lang-v13/ru` | Russian ↔ Kabardian (model version 2), int8 ONNX; Russian form dictionary for colour compounds | 79 MB + 3.6 MB | SIA Copper Line (release LICENCE); source model CC BY-NC 4.0; dictionary from Wiktionary via Kaikki, CC BY-SA 4.0 |
 | `translate-madlad-v1` | MADLAD-400 3B, Core ML, 4-bit (Mac with Apple Silicon) | 1.33 GB | Apache-2.0 (modified, see ATTRIBUTION.md) |
 | `translate-v1` | SMaLL-100, int8 ONNX (Windows, Linux, Intel Mac) | 289 MB | MIT (alirezamsh/small100; teacher facebook/m2m100_418M) |
 | `v5.1` + `v5.3` | Silero v5 TTS, ONNX; Russian stress and homographs | 88 MB + 30 MB | CC BY-NC-SA 4.0 (snakers4/silero-models); stress: silero-stress, MIT |
