@@ -66,6 +66,16 @@ background (once, 0.8–1.7 GB; progress is shown on the page) — whatever is r
 beforehand: `kabardian-download-models all`; to start without downloading: `kabardian-translator --no-download`.
 
 Updating: `py -m pip install -U kabardian-translator` (Windows), `uv tool upgrade kabardian-translator` (Mac, Linux).
+The installed version: `pip show kabardian-translator` (Windows), `uv tool list` (Mac, Linux). If the update
+leaves the old version, pip has kept an old list of versions in its cache — clear it and install again (the
+downloaded models stay where they are):
+
+```powershell
+pip cache purge
+pip install --upgrade --no-cache-dir kabardian-translator
+```
+
+With uv: `uv tool upgrade --refresh kabardian-translator`.
 
 Memory: on a Mac with Apple Silicon (macOS 13+) about 3 GB free while MADLAD is loaded — its first start prepares the
 model for the Neural Engine (about two minutes), later starts are fast; with SMaLL-100 about 1.5 GB.
