@@ -5,4 +5,4 @@ pair, Kabardian through Russian). Speech: Silero v5 and the Baltic Piper model o
 the rest. Everything runs on the Mac; nothing is sent anywhere.
 """
 
-__version__ = "3.0.3"
+__version__ = "3.0.4"

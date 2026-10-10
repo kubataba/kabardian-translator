@@ -50,16 +50,18 @@ class Package:
 
 PACKAGES = {
     "kbd": Package(
-        key="kbd", title="Kabardian translator (Russian ↔ Kabardian)", tag="kbd-translate-v2", size_mb=83,
-        assets=(Asset("kbd-translate-v2.zip", "1a93b8aece1123cfe64360f7b27ca4aadc4959b367eae933045f6e253fc125d6",
-                      "translate-kbd/release-v2/kbd-translate-v2.zip", unzip=True),
+        key="kbd", title="Kabardian translator (Russian ↔ Kabardian)", tag="kbd-translate-v2", size_mb=76,
+        # the desktop build: 7-bit weights, so x86 CPUs without VNNI (AVX2 sums pairs of u8×s8 products in int16 and
+        # saturates) compute it exactly; the 8-bit kbd-translate-v2.zip broke there into ">>kbd<<" on long sentences
+        assets=(Asset("kbd-translate-v2-desktop.zip", "7182fe3864c122aae37e470183b6bad690a63fafa50072c111cea0afe25dcc39",
+                      "translate-kbd/release-v2/kbd-translate-v2-desktop.zip", unzip=True),
                 # Russian form dictionary for the colour-compound rule (language pack ru, Wiktionary/Kaikki)
                 Asset("lang-ru.zip", "47fd7e8d0beb8fa36c5a2366ab80a3d9de58dcf77238726e77b64c0c0ad4c8db",
                       "lang-ru.zip", unzip=True, tag="lang-v13", members=("ru-morph.txt",))),
         required=("encoder_model.int8.onnx", "decoder_merged.int8.int32flag.onnx", "source.spm", "vocab.json",
                   "ru-morph.txt"),
         licence="SIA Copper Line, see the release LICENCE; source model kubataba/ru-kbd-bidirectional (CC BY-NC 4.0)",
-        marker="kbd-translate-v2"),
+        marker="kbd-translate-v2-desktop"),
     "madlad": Package(
         key="madlad", title="MADLAD-400 3B on the Neural Engine (every other language)", tag="translate-madlad-v1",
         size_mb=1335,

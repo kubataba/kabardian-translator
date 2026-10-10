@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kabardian-translator"
-version = "3.0.3"
+version = "3.0.4"
 description = "Local translation and speech for Kabardian and 30-37 more languages on macOS, Linux and Windows: our Kabardian model, MADLAD-400 (Apple Silicon) or SMaLL-100, Silero, Baltic, Apple and Windows voices"
 readme = "README.md"
 requires-python = ">=3.11"

@@ -33,11 +33,15 @@ tr = Translator()
 checks = [("en", "ru", "The old castle stood on the hill above the river.", r"[А-Яа-яЁё]{3}"),
           ("ru", "kbd", "Старинный замок стоял на горе.", r"[ӏ]|[А-Яа-я]{3}"),
           ("kbd", "en", "Уи пщыхьэщхьэ фӏыуэ!", r"[A-Za-z]{3}"),
-          ("ru", "lv", "Мы долго шли по лесу.", r"[a-zāēīūčšž]{3}")]
+          ("ru", "lv", "Мы долго шли по лесу.", r"[a-zāēīūčšž]{3}"),
+          # the sentence that broke on Windows (x86 without VNNI) into ">>kbd<<" with the 8-bit model
+          ("ru", "kbd", "И день и ночь мы мчимся прочь от боли страха и забот и наконец закончив путь мечтаем вновь "
+                        "его вернуть.", r"[ӏ]")]
 for s, t, text, pattern in checks:
     out = tr.text(text, s, t)
     print(f"{s}->{t}: {out}")
     assert out.strip() and out.strip() != text and re.search(pattern, out), f"{s}->{t} failed"
+    assert ">>" not in out, f"{s}->{t}: a model tag in the output"
 
 sp = Speech()
 for lang, text in [("ru", "Старинный замок стоял на горе."), ("lv", "Grāmata iznāca 1984. gadā.")]:

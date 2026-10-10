@@ -1,4 +1,4 @@
-"""Our Russian ↔ Kabardian translator (package kbd-translate-v2, int8 ONNX — the SayFable app's files).
+"""Our Russian ↔ Kabardian translator (package kbd-translate-v2, int8 ONNX — the SayFable app's model; the desktop build with 7-bit weights).
 
 The pipeline is the app's (prompts 408, 410, 414), ported from its Python reference:
   * one model for both directions; the target tag `>>kbd<<` / `>>ru<<` is the first source token;

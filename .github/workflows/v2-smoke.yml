@@ -33,6 +33,11 @@ jobs:
           python -m pip install dist/*.whl
       - name: Download the models of this system
         run: kabardian-download-models all
+      - name: The processor (int8 on x86 without VNNI saturates; prompt 425)
+        shell: bash
+        run: |
+          python -m pip install -q py-cpuinfo
+          python -c "import cpuinfo; i = cpuinfo.get_cpu_info(); f = i.get('flags', []); print(i.get('brand_raw'), '| avx2', 'avx2' in f, '| vnni', [x for x in f if 'vnni' in x])"
       - name: Smoke test
         run: python v2/tests/smoke.py
       - name: The web server, as a browser uses it
