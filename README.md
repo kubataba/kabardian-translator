@@ -1,6 +1,26 @@
 # Kabardian Translator
 
-Translation and speech synthesis for Kabardian and other languages, running locally.
+Translation and speech for Kabardian and 37 more languages, running locally on macOS, Windows and Linux — no text
+leaves the computer.
+
+**Translation**
+- **Russian ↔ Kabardian** — our own model (FLORES-200 chrF 60.0 / 51.7). Kabardian with any other language goes
+  through Russian automatically.
+- **Any other pair** — on a Mac with Apple Silicon **MADLAD-400 3B** on the Neural Engine, all 37 languages; on
+  Windows, Linux and Intel Macs **SMaLL-100**, 30 of them (no Kyrgyz, Tatar, Tajik, Bashkir, Uzbek, Catalan or
+  Norwegian). The languages: English, German, French, Spanish, Italian, Portuguese, Catalan, Romanian, Dutch,
+  Swedish, Danish, Norwegian, Finnish, Hungarian, Greek; Ukrainian, Belarusian, Polish, Czech, Slovak, Slovenian,
+  Croatian, Bulgarian; Latvian, Lithuanian, Estonian; Turkish, Azerbaijani, Kazakh, Kyrgyz, Tatar, Bashkir, Uzbek;
+  Armenian, Georgian, Tajik; Russian.
+
+**Speech**
+- **Silero `v5_cis_base_nostress`** ([snakers4/silero-models](https://github.com/snakers4/silero-models),
+  CC BY-NC-SA 4.0; our ONNX export, no PyTorch) — Russian, Kabardian, Ukrainian, Belarusian, Kazakh, Kyrgyz, Tatar,
+  Bashkir, Uzbek, Azerbaijani, Tajik, Armenian, Georgian; stress for Russian, Ukrainian and Belarusian is placed
+  before synthesis (silero-stress);
+- **our Baltic model** — Latvian, Lithuanian, Estonian (18 voices);
+- **system voices** for the other European languages and Turkish — Apple voices on a Mac, Windows voices on Windows
+  (whatever is installed).
 
 | version | folder | platform | translation | speech |
 |---|---|---|---|---|
